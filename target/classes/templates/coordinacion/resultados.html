@@ -72,11 +72,13 @@
                         </button>
 
                         <!-- Formulario colapsable -->
-                        <!-- ✅ th:id con th:attr para evitar problemas de parsing -->
                         <div class="collapse mt-3 res-form-collapse" th:attr="id='form-' + ${a.id}">
                             <form method="post"
                                   class="res-form"
                                   th:attr="action=@{/coordinacion/resultados/publicar/{id}(id=${a.id})},data-id=${a.id}">
+
+                                <!-- Campo hidden para clasificacion — se llena por JS -->
+                                <input type="hidden" name="clasificacion" class="res-clasificacion" value="MEDIO"/>
 
                                 <!-- Info general -->
                                 <div class="sp-form-section">
@@ -84,7 +86,6 @@
                                     <div class="row g-2">
                                         <div class="col-6">
                                             <label class="sp-label">Fecha de presentación</label>
-                                            <!-- ✅ SIN th:onchange — el JS usa event delegation -->
                                             <input type="date" name="fechaPresentacion"
                                                    class="sp-input res-fecha"
                                                    required/>
@@ -104,20 +105,20 @@
                                     </div>
                                 </div>
 
-                                <!-- Puntajes -->
+                                <!-- Puntajes — names corregidos para coincidir con el controller -->
                                 <div class="sp-form-section">
                                     <div class="sp-form-section-title">Puntajes por componente</div>
                                     <div class="row g-2">
                                         <div class="col-6">
                                             <label class="sp-label">Razonamiento cuantitativo</label>
                                             <input type="number" step="0.1" min="0" max="300"
-                                                   name="razonCuantitativo"
+                                                   name="razonamientoCuantitativo"
                                                    class="sp-input res-rc" required/>
                                         </div>
                                         <div class="col-6">
                                             <label class="sp-label">Lectura crítica</label>
                                             <input type="number" step="0.1" min="0" max="300"
-                                                   name="lecturaCritica"
+                                                   name="lecturasCritica"
                                                    class="sp-input res-lc" required/>
                                         </div>
                                         <div class="col-6">
@@ -144,7 +145,7 @@
                                                 <span style="font-size:9px;color:#059669;font-weight:400">⚡ automático</span>
                                             </label>
                                             <input type="number" step="0.1"
-                                                   name="global"
+                                                   name="puntajeGlobal"
                                                    class="sp-input res-pg"
                                                    readonly
                                                    style="background:#f0fdf4;font-weight:700;color:var(--sp-accent)"
@@ -296,8 +297,6 @@
 </style>
 
 <script>
-// ✅ Event delegation — sin th:onchange en el HTML
-// Escucha todos los inputs dentro de formularios .res-form
 document.addEventListener('input', function(e) {
     const form = e.target.closest('.res-form');
     if (!form) return;
@@ -305,17 +304,17 @@ document.addEventListener('input', function(e) {
 });
 
 function calcularAuto(form) {
-    // ── 1. PERÍODO según fecha ─────────────────────────────────────────
-    const fechaInput  = form.querySelector('.res-fecha');
+    // 1. PERÍODO según fecha
+    const fechaInput   = form.querySelector('.res-fecha');
     const periodoInput = form.querySelector('.res-periodo');
     if (fechaInput && fechaInput.value && periodoInput) {
-        const fecha    = new Date(fechaInput.value + 'T12:00:00');
-        const anio     = fecha.getFullYear();
-        const mes      = fecha.getMonth() + 1;
+        const fecha = new Date(fechaInput.value + 'T12:00:00');
+        const anio  = fecha.getFullYear();
+        const mes   = fecha.getMonth() + 1;
         periodoInput.value = anio + (mes <= 6 ? '-1' : '-2');
     }
 
-    // ── 2. PUNTAJE GLOBAL = promedio de los 5 módulos genéricos ────────
+    // 2. PUNTAJE GLOBAL = promedio de los 5 módulos
     const rc  = parseFloat(form.querySelector('.res-rc')?.value)  || 0;
     const lc  = parseFloat(form.querySelector('.res-lc')?.value)  || 0;
     const ce  = parseFloat(form.querySelector('.res-ce')?.value)  || 0;
@@ -331,9 +330,9 @@ function calcularAuto(form) {
         if (pgInput) pgInput.value = global;
     }
 
-    // ── 3. NIVEL DE DESEMPEÑO ──────────────────────────────────────────
-    const display = form.querySelector('.res-nivel-display');
-    if (!display) return;
+    // 3. NIVEL DE DESEMPEÑO + actualizar campo hidden clasificacion
+    const display     = form.querySelector('.res-nivel-display');
+    const clasiInput  = form.querySelector('.res-clasificacion');
 
     if (global > 0) {
         let nivel, color, bg, emoji;
@@ -342,15 +341,21 @@ function calcularAuto(form) {
         else if (global >= 120) { nivel = 'MEDIO';    color = '#92400e'; bg = '#fef3c7'; emoji = '📊'; }
         else                    { nivel = 'BAJO';     color = '#991b1b'; bg = '#fee2e2'; emoji = '📉'; }
 
-        display.textContent       = emoji + ' ' + nivel + ' (puntaje: ' + global + ')';
-        display.style.background  = bg;
-        display.style.color       = color;
-        display.style.borderColor = color;
+        if (clasiInput)  clasiInput.value        = nivel;
+        if (display) {
+            display.textContent      = emoji + ' ' + nivel + ' (puntaje: ' + global + ')';
+            display.style.background = bg;
+            display.style.color      = color;
+            display.style.borderColor = color;
+        }
     } else {
-        display.textContent       = 'Ingresa los 5 puntajes para calcular...';
-        display.style.background  = '#f3f4f6';
-        display.style.color       = '#6b7280';
-        display.style.borderColor = '#e5e7eb';
+        if (clasiInput) clasiInput.value          = 'MEDIO';
+        if (display) {
+            display.textContent      = 'Ingresa los 5 puntajes para calcular...';
+            display.style.background = '#f3f4f6';
+            display.style.color      = '#6b7280';
+            display.style.borderColor = '#e5e7eb';
+        }
     }
 }
 </script>
