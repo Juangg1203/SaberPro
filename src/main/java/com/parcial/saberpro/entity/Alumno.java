@@ -30,6 +30,12 @@ public class Alumno {
     private String semestre;
     private String codigoEstudiante;
 
+    // ── Créditos académicos ───────────────────────────────────────────────────
+    private Integer creditosTotalesPrograma;   // Total de créditos que tiene el programa
+    private Integer creditosCursados;          // Créditos que ya cursó el estudiante
+    private Double  porcentajeCreditos;        // % calculado al guardar
+    private static final double MINIMO_CREDITOS_PORCENTAJE = 75.0; // Regla UTS
+
     private String estadoSaberPro;
     private boolean aprobadoPorCoordinacion;
     private LocalDateTime fechaAprobacion;
@@ -45,6 +51,16 @@ public class Alumno {
 
     // ✅ NUEVO: PENDIENTE_PRUEBA → EN_PROCESO → RESULTADOS_PUBLICADOS
     private String estadoPrueba;
+
+    // ── Convocatoria de presentación ──────────────────────────────────────
+    private String lugarPresentacion;     // Ej: "UIS — Bucaramanga, Bloque A Salon 201"
+    private java.time.LocalDate fechaPresentacionConvocatoria; // Fecha oficial asignada por coordinación
+    private String horaPresentacion;      // Ej: "08:00 AM"
+    private String observacionesConvocatoria; // Instrucciones adicionales
+
+    // ── Historial de pruebas (múltiples intentos) ────────────────────────
+    private java.util.List<ResultadoSaberPro> historialResultados = new java.util.ArrayList<>();
+    private Integer numeroPrueba = 1;     // Número de la prueba actual (1, 2, 3...)
 
     private ResultadoSaberPro resultadoUnico;
     private ResultadoSaberPro resultadoTotal;
@@ -66,6 +82,34 @@ public class Alumno {
 
     public String getNombreCompleto() {
         return nombre + " " + apellido;
+    }
+
+    /**
+     * Calcula el porcentaje de créditos cursados sobre el total del programa.
+     * Retorna 0 si no hay datos suficientes.
+     */
+    public double calcularPorcentajeCreditos() {
+        if (creditosTotalesPrograma == null || creditosTotalesPrograma <= 0
+                || creditosCursados == null) return 0.0;
+        return (creditosCursados * 100.0) / creditosTotalesPrograma;
+    }
+
+    /**
+     * Indica si el estudiante cumple el mínimo del 75% de créditos cursados.
+     */
+    public boolean cumpleRequisitoCreditos() {
+        return calcularPorcentajeCreditos() >= MINIMO_CREDITOS_PORCENTAJE;
+    }
+
+    /**
+     * Cuántos créditos le faltan para llegar al 75%.
+     * Retorna 0 si ya cumple o si no hay datos.
+     */
+    public int creditosFaltantes() {
+        if (creditosTotalesPrograma == null || creditosTotalesPrograma <= 0) return 0;
+        int minimo = (int) Math.ceil(creditosTotalesPrograma * MINIMO_CREDITOS_PORCENTAJE / 100.0);
+        int cursados = creditosCursados != null ? creditosCursados : 0;
+        return Math.max(0, minimo - cursados);
     }
 
     /**
@@ -117,6 +161,23 @@ public class Alumno {
     public String getCodigoEstudiante() { return codigoEstudiante; }
     public void setCodigoEstudiante(String codigoEstudiante) { this.codigoEstudiante = codigoEstudiante; }
 
+    public Integer getCreditosTotalesPrograma() { return creditosTotalesPrograma; }
+    public void setCreditosTotalesPrograma(Integer creditosTotalesPrograma) {
+        this.creditosTotalesPrograma = creditosTotalesPrograma;
+        if (creditosTotalesPrograma != null && creditosCursados != null)
+            this.porcentajeCreditos = calcularPorcentajeCreditos();
+    }
+
+    public Integer getCreditosCursados() { return creditosCursados; }
+    public void setCreditosCursados(Integer creditosCursados) {
+        this.creditosCursados = creditosCursados;
+        if (creditosTotalesPrograma != null && creditosCursados != null)
+            this.porcentajeCreditos = calcularPorcentajeCreditos();
+    }
+
+    public Double getPorcentajeCreditos() { return porcentajeCreditos; }
+    public void setPorcentajeCreditos(Double porcentajeCreditos) { this.porcentajeCreditos = porcentajeCreditos; }
+
     public String getEstadoSaberPro() { return estadoSaberPro; }
     public void setEstadoSaberPro(String estadoSaberPro) { this.estadoSaberPro = estadoSaberPro; }
 
@@ -146,6 +207,19 @@ public class Alumno {
 
     public String getEstadoPrueba() { return estadoPrueba; }
     public void setEstadoPrueba(String estadoPrueba) { this.estadoPrueba = estadoPrueba; }
+
+    public String getLugarPresentacion() { return lugarPresentacion; }
+    public void setLugarPresentacion(String v) { this.lugarPresentacion = v; }
+    public java.time.LocalDate getFechaPresentacionConvocatoria() { return fechaPresentacionConvocatoria; }
+    public void setFechaPresentacionConvocatoria(java.time.LocalDate v) { this.fechaPresentacionConvocatoria = v; }
+    public String getHoraPresentacion() { return horaPresentacion; }
+    public void setHoraPresentacion(String v) { this.horaPresentacion = v; }
+    public String getObservacionesConvocatoria() { return observacionesConvocatoria; }
+    public void setObservacionesConvocatoria(String v) { this.observacionesConvocatoria = v; }
+    public java.util.List<ResultadoSaberPro> getHistorialResultados() { return historialResultados; }
+    public void setHistorialResultados(java.util.List<ResultadoSaberPro> v) { this.historialResultados = v != null ? v : new java.util.ArrayList<>(); }
+    public Integer getNumeroPrueba() { return numeroPrueba != null ? numeroPrueba : 1; }
+    public void setNumeroPrueba(Integer v) { this.numeroPrueba = v; }
 
     public ResultadoSaberPro getResultadoUnico() { return resultadoUnico; }
     public void setResultadoUnico(ResultadoSaberPro resultadoUnico) { this.resultadoUnico = resultadoUnico; }

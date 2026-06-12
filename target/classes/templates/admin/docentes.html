@@ -137,9 +137,17 @@
                                        placeholder="correo@institucion.edu.co" required/>
                             </div>
                             <div class="col-md-6">
-                                <label class="sp-form-label">Contraseña *</label>
-                                <input type="password" th:field="*{password}" class="form-control sp-form-control"
-                                       placeholder="Mínimo 8 caracteres"/>
+                                <label class="sp-form-label">Contraseña
+                                    <span class="text-muted fw-normal small" th:if="${docente.id != null}">(vacío = mantener actual)</span>
+                                </label>
+                                <div class="input-group">
+                                    <input type="password" id="pwdDocente" th:field="*{password}"
+                                           class="form-control sp-form-control" placeholder="••••••••"/>
+                                    <button class="btn btn-outline-secondary" type="button"
+                                            onclick="togglePwdDoc()">
+                                        <i class="bi bi-eye-fill" id="eyeDocente"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="d-flex gap-2 justify-content-end mt-4">
@@ -160,7 +168,14 @@
         if (tieneId) {
             new bootstrap.Modal(document.getElementById('modalDocente')).show();
         }
-    </script>
+        function togglePwdDoc() {
+        const i = document.getElementById('pwdDocente');
+        const ic = document.getElementById('eyeDocente');
+        if (!i) return;
+        i.type = i.type === 'password' ? 'text' : 'password';
+        ic.className = i.type === 'password' ? 'bi bi-eye-fill' : 'bi bi-eye-slash-fill';
+    }
+</script>
 
 </main>
 </div>

@@ -72,6 +72,33 @@ public class WebController {
         return "admin/dashboard";
     }
 
+    @GetMapping("/admin/inicializar-usuarios")
+    public String inicializarUsuarios(RedirectAttributes ra) {
+        crearOActualizarUsuarioSistema("admin@uts.edu.co",         "admin123",  "Administrador", "Sistema",   "0000000001", "ADMIN");
+        crearOActualizarUsuarioSistema("coordinacion@uts.edu.co",  "coord123",  "Coordinación",  "Saber Pro", "0000000002", "COORDINACION");
+        crearOActualizarUsuarioSistema("coord2@uts.edu.co",        "coord456",  "Laura",         "Martínez",  "0000000005", "COORDINACION");
+        crearOActualizarUsuarioSistema("docente@uts.edu.co",       "doc123",    "Carlos",        "Pérez",     "0000000003", "DOCENTE");
+        crearOActualizarUsuarioSistema("docente2@uts.edu.co",      "doc456",    "Andrés",        "Gómez",     "0000000006", "DOCENTE");
+        ra.addFlashAttribute("mensaje",
+            "Usuarios del sistema inicializados correctamente: " +
+            "admin@uts.edu.co / admin123 | coordinacion@uts.edu.co / coord123 | " +
+            "coord2@uts.edu.co / coord456 | docente@uts.edu.co / doc123 | docente2@uts.edu.co / doc456");
+        ra.addFlashAttribute("tipoMensaje", "success");
+        return "redirect:/admin/dashboard";
+    }
+
+    private void crearOActualizarUsuarioSistema(String email, String pass, String nombre,
+                                                  String apellido, String cedula, String rol) {
+        usuarioRepository.findByEmail(email).ifPresentOrElse(
+            u -> { u.setNombre(nombre); u.setApellido(apellido); u.setPassword(pass);
+                   u.setCedula(cedula); u.setRol(rol); u.setActivo(true);
+                   u.setFechaActualizacion(LocalDateTime.now()); usuarioRepository.save(u); },
+            () -> { Usuario u = new Usuario(); u.setNombre(nombre); u.setApellido(apellido);
+                    u.setEmail(email); u.setPassword(pass); u.setCedula(cedula); u.setRol(rol);
+                    u.setActivo(true); u.setFechaCreacion(LocalDateTime.now()); usuarioRepository.save(u); }
+        );
+    }
+
     // ── ADMIN: COORDINACIONES ────────────────────────────────────────────────
     @GetMapping("/admin/coordinaciones")
     public String listarCoordinaciones(Model model) {
@@ -84,8 +111,7 @@ public class WebController {
     public String guardarCoordinacion(@ModelAttribute Usuario coordinacion, RedirectAttributes ra) {
         coordinacion.setRol("COORDINACION");
         if (coordinacion.getId() == null || coordinacion.getId().isBlank()) {
-            coordinacion.setId(null);
-            coordinacion.setFechaCreacion(LocalDateTime.now());
+            coordinacion.setId(null); coordinacion.setFechaCreacion(LocalDateTime.now());
         } else {
             usuarioRepository.findById(coordinacion.getId()).ifPresent(u -> {
                 if (coordinacion.getPassword() == null || coordinacion.getPassword().isBlank())
@@ -124,8 +150,7 @@ public class WebController {
                                 RedirectAttributes ra) {
         usuarioRepository.findById(id).ifPresent(u -> {
             u.setPassword(nuevaPassword.isBlank() ? u.getCedula() : nuevaPassword);
-            u.setFechaActualizacion(LocalDateTime.now());
-            usuarioRepository.save(u);
+            u.setFechaActualizacion(LocalDateTime.now()); usuarioRepository.save(u);
         });
         ra.addFlashAttribute("mensaje", "Contraseña restablecida correctamente");
         ra.addFlashAttribute("tipoMensaje", "success");
@@ -284,7 +309,13 @@ public class WebController {
         return "coordinacion/resultados";
     }
 
-    @PostMapping("/coordinacion/resultados/subir/{id}")
+    /**
+     * Publica resultados de un alumno.
+     * Acepta AMBAS rutas para compatibilidad con el HTML:
+     *   POST /coordinacion/resultados/subir/{id}
+     *   POST /coordinacion/resultados/publicar/{id}   ← la que usa el HTML generado
+     */
+    @PostMapping({"/coordinacion/resultados/subir/{id}", "/coordinacion/resultados/publicar/{id}"})
     public String subirResultados(
             @PathVariable String id,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaPresentacion,
@@ -314,18 +345,68 @@ public class WebController {
             resultado.setModuloEspecificoPuntaje(moduloEspecificoPuntaje);
             resultado.setPuntajeGlobal(puntajeGlobal);
             resultado.setClasificacion(clasificacion);
-            resultado.setObservaciones(observaciones);
+            resultado.setObservaciones("Prueba #" + alumno.getNumeroPrueba()
+                    + (observaciones != null && !observaciones.isBlank() ? " — " + observaciones : ""));
 
-            // Guardar en resultadoUnico Y resultadoTotal
+            // Agregar al historial
+            if (alumno.getHistorialResultados() == null)
+                alumno.setHistorialResultados(new java.util.ArrayList<>());
+            alumno.getHistorialResultados().add(resultado);
+
+            // El resultado más reciente es el único y el total
             alumno.setResultadoUnico(resultado);
-            alumno.setResultadoTotal(resultado); // ← CORRECCIÓN: también se asigna a resultadoTotal
+            alumno.setResultadoTotal(resultado);
             alumno.setEstadoPrueba("RESULTADOS_PUBLICADOS");
             alumno.setEstadoSaberPro("RESULTADOS_PUBLICADOS");
             alumno.setFechaActualizacion(LocalDateTime.now());
             alumnoRepository.save(alumno);
         });
 
-        ra.addFlashAttribute("mensaje", "Resultados publicados correctamente. El estudiante ya puede verlos.");
+        ra.addFlashAttribute("mensaje", "Resultados publicados. El estudiante ya puede verlos.");
+        ra.addFlashAttribute("tipoMensaje", "success");
+        return "redirect:/coordinacion/resultados";
+    }
+
+    // ── Asignar convocatoria de presentación ──────────────────────────────────
+    @PostMapping("/coordinacion/convocatoria/{id}")
+    public String asignarConvocatoria(
+            @PathVariable String id,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaConvocatoria,
+            @RequestParam(required = false) String hora,
+            @RequestParam String lugar,
+            @RequestParam(required = false) String observaciones,
+            RedirectAttributes ra) {
+        alumnoRepository.findById(id).ifPresent(alumno -> {
+            alumno.setFechaPresentacionConvocatoria(fechaConvocatoria);
+            alumno.setHoraPresentacion(hora);
+            alumno.setLugarPresentacion(lugar);
+            alumno.setObservacionesConvocatoria(observaciones);
+            alumno.setFechaActualizacion(LocalDateTime.now());
+            alumnoRepository.save(alumno);
+        });
+        ra.addFlashAttribute("mensaje", "Convocatoria asignada correctamente.");
+        ra.addFlashAttribute("tipoMensaje", "success");
+        return "redirect:/coordinacion/resultados";
+    }
+
+    // ── Habilitar segunda prueba ──────────────────────────────────────────────
+    @PostMapping("/coordinacion/segunda-prueba/{id}")
+    public String habilitarSegundaPrueba(@PathVariable String id, RedirectAttributes ra) {
+        alumnoRepository.findById(id).ifPresent(alumno -> {
+            int nuevaNum = alumno.getNumeroPrueba() + 1;
+            alumno.setNumeroPrueba(nuevaNum);
+            alumno.setEstadoSaberPro("PAGO_VERIFICADO");
+            alumno.setEstadoPrueba("PENDIENTE_PRUEBA");
+            alumno.setComprobantePagoPath(null);
+            alumno.setFechaCargoPago(null);
+            alumno.setPagoVerificado(false);
+            alumno.setFechaPresentacionConvocatoria(null);
+            alumno.setLugarPresentacion(null);
+            alumno.setHoraPresentacion(null);
+            alumno.setFechaActualizacion(LocalDateTime.now());
+            alumnoRepository.save(alumno);
+        });
+        ra.addFlashAttribute("mensaje", "Segunda prueba habilitada. El estudiante debe cargar un nuevo comprobante.");
         ra.addFlashAttribute("tipoMensaje", "success");
         return "redirect:/coordinacion/resultados";
     }
@@ -408,12 +489,53 @@ public class WebController {
     public String aprobarAlumnoCoord(@PathVariable String id,
                                       @RequestParam(defaultValue = "coordinacion") String aprobadoPor,
                                       RedirectAttributes ra) {
-        alumnoRepository.findById(id).ifPresent(a -> {
-            a.setAprobadoPorCoordinacion(true); a.setEstadoSaberPro("APROBADO");
-            a.setFechaAprobacion(LocalDateTime.now()); a.setAprobadoPor(aprobadoPor);
-            a.setFechaActualizacion(LocalDateTime.now()); alumnoRepository.save(a);
-        });
-        ra.addFlashAttribute("mensaje","Estudiante aprobado"); ra.addFlashAttribute("tipoMensaje","success");
+        alumnoRepository.findById(id).ifPresentOrElse(alumno -> {
+
+            boolean sinDatosCreditos = alumno.getCreditosTotalesPrograma() == null
+                    || alumno.getCreditosCursados() == null
+                    || alumno.getCreditosTotalesPrograma() <= 0;
+
+            if (sinDatosCreditos) {
+                alumno.setAprobadoPorCoordinacion(true);
+                alumno.setEstadoSaberPro("APROBADO");
+                alumno.setFechaAprobacion(LocalDateTime.now());
+                alumno.setAprobadoPor(aprobadoPor);
+                alumno.setFechaActualizacion(LocalDateTime.now());
+                alumnoRepository.save(alumno);
+                ra.addFlashAttribute("mensaje",
+                    "Estudiante aprobado, pero no tiene créditos registrados. Verifica manualmente que cumpla el 75% del programa.");
+                ra.addFlashAttribute("tipoMensaje", "warning");
+
+            } else if (alumno.cumpleRequisitoCreditos()) {
+                double pct = alumno.calcularPorcentajeCreditos();
+                alumno.setAprobadoPorCoordinacion(true);
+                alumno.setEstadoSaberPro("APROBADO");
+                alumno.setFechaAprobacion(LocalDateTime.now());
+                alumno.setAprobadoPor("Sistema automático");
+                alumno.setFechaActualizacion(LocalDateTime.now());
+                alumnoRepository.save(alumno);
+                ra.addFlashAttribute("mensaje",
+                    "Estudiante aprobado automáticamente. Tiene " + alumno.getCreditosCursados() +
+                    " créditos cursados (" + String.format("%.1f", pct) + "% — cumple el 75% mínimo).");
+                ra.addFlashAttribute("tipoMensaje", "success");
+
+            } else {
+                int faltantes = alumno.creditosFaltantes();
+                double pct = alumno.calcularPorcentajeCreditos();
+                int minimo = (int) Math.ceil(alumno.getCreditosTotalesPrograma() * 75.0 / 100.0);
+                alumno.setAprobadoPorCoordinacion(false);
+                alumno.setEstadoSaberPro("RECHAZADO");
+                alumno.setAprobadoPor("Sistema automático — créditos insuficientes");
+                alumno.setFechaActualizacion(LocalDateTime.now());
+                alumnoRepository.save(alumno);
+                ra.addFlashAttribute("mensaje",
+                    "Solicitud rechazada. " + alumno.getNombreCompleto() + " tiene " +
+                    alumno.getCreditosCursados() + " créditos (" + String.format("%.1f", pct) +
+                    "%) y necesita " + minimo + ". Le faltan " + faltantes + ".");
+                ra.addFlashAttribute("tipoMensaje", "danger");
+            }
+
+        }, () -> ra.addFlashAttribute("mensaje", "Estudiante no encontrado."));
         return "redirect:/coordinacion/aprobar";
     }
 
@@ -423,7 +545,8 @@ public class WebController {
             a.setAprobadoPorCoordinacion(false); a.setEstadoSaberPro("RECHAZADO");
             a.setFechaActualizacion(LocalDateTime.now()); alumnoRepository.save(a);
         });
-        ra.addFlashAttribute("mensaje","Solicitud rechazada"); ra.addFlashAttribute("tipoMensaje","danger");
+        ra.addFlashAttribute("mensaje","Solicitud rechazada manualmente");
+        ra.addFlashAttribute("tipoMensaje","danger");
         return "redirect:/coordinacion/aprobar";
     }
 
@@ -555,8 +678,10 @@ public class WebController {
             String nombreArchivo = UUID.randomUUID() + "_" + comprobante.getOriginalFilename();
             Files.copy(comprobante.getInputStream(), uploadPath.resolve(nombreArchivo), StandardCopyOption.REPLACE_EXISTING);
             alumno.setComprobantePagoPath(UPLOAD_DIR + nombreArchivo);
-            alumno.setFechaCargoPago(LocalDateTime.now()); alumno.setEstadoSaberPro("PAGADO");
-            alumno.setFechaActualizacion(LocalDateTime.now()); alumnoRepository.save(alumno);
+            alumno.setFechaCargoPago(LocalDateTime.now());
+            alumno.setEstadoSaberPro("PAGADO");
+            alumno.setFechaActualizacion(LocalDateTime.now());
+            alumnoRepository.save(alumno);
             ra.addFlashAttribute("mensaje","Comprobante cargado exitosamente."); ra.addFlashAttribute("tipoMensaje","success");
         } catch (IOException e) {
             ra.addFlashAttribute("mensaje","Error al cargar: " + e.getMessage()); ra.addFlashAttribute("tipoMensaje","danger");
@@ -590,8 +715,6 @@ public class WebController {
         Alumno alumno = getAlumnoFromSession(session);
         if (alumno != null) {
             model.addAttribute("alumno", alumno);
-            // CORRECCIÓN: se usa getResultadoUnico() como fuente de datos
-            // ya que ambas vistas muestran el mismo resultado del alumno
             model.addAttribute("resultado", alumno.getResultadoUnico());
         }
         return "estudiante/resultado-total";
