@@ -28,6 +28,53 @@
 
     <div th:if="${alumno != null}">
 
+        <!-- ══ CONVOCATORIA — banner grande cuando pago verificado y hay lugar asignado ══ -->
+        <div th:if="${alumno.pagoVerificado and alumno.lugarPresentacion != null}" class="sp-convocatoria-banner mb-4">
+            <div class="sp-conv-header">
+                <i class="bi bi-mortarboard-fill sp-conv-icon"></i>
+                <div>
+                    <div class="sp-conv-title">📋 Convocatoria Oficial — Saber Pro</div>
+                    <div class="sp-conv-prueba"
+                         th:text="'Prueba #' + ${alumno.numeroPrueba} + ' — ' + (alumno.getTipoPruebaCalculado() == 'TYT' ? 'TYT Tecnólogo' : 'Saber Pro Profesional')">-</div>
+                </div>
+            </div>
+            <div class="sp-conv-body">
+                <div class="sp-conv-item sp-conv-lugar">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <div>
+                        <div class="sp-conv-lbl">Lugar de presentación</div>
+                        <div class="sp-conv-val" th:text="${alumno.lugarPresentacion}">-</div>
+                    </div>
+                </div>
+                <div class="sp-conv-item" th:if="${alumno.fechaPresentacionConvocatoria != null}">
+                    <i class="bi bi-calendar-event-fill"></i>
+                    <div>
+                        <div class="sp-conv-lbl">Fecha de presentación</div>
+                        <div class="sp-conv-val"
+                             th:text="${#temporals.format(alumno.fechaPresentacionConvocatoria, 'EEEE dd 'de' MMMM 'de' yyyy', new java.util.Locale('es'))}">-</div>
+                    </div>
+                </div>
+                <div class="sp-conv-item" th:if="${alumno.horaPresentacion != null}">
+                    <i class="bi bi-clock-fill"></i>
+                    <div>
+                        <div class="sp-conv-lbl">Hora</div>
+                        <div class="sp-conv-val" th:text="${alumno.horaPresentacion}">-</div>
+                    </div>
+                </div>
+                <div class="sp-conv-item" th:if="${alumno.observacionesConvocatoria != null}">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <div>
+                        <div class="sp-conv-lbl">Instrucciones importantes</div>
+                        <div class="sp-conv-val" th:text="${alumno.observacionesConvocatoria}">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="sp-conv-footer">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                Recuerda llevar tu <strong>cédula original</strong> y llegar con al menos 30 minutos de anticipación.
+            </div>
+        </div>
+
         <!-- Aviso no aprobado -->
         <div th:if="${!alumno.aprobadoPorCoordinacion}" class="alert alert-warning d-flex align-items-center gap-3 mb-4">
             <i class="bi bi-exclamation-triangle-fill fs-4"></i>
@@ -316,5 +363,20 @@ if (dz) {
     });
 }
 </script>
+<style>
+/* Convocatoria banner */
+.sp-convocatoria-banner{border-radius:var(--sp-radius);overflow:hidden;box-shadow:var(--sp-shadow-md);border:2px solid #059669}
+.sp-conv-header{background:linear-gradient(135deg,#064e3b,#059669);color:#fff;padding:20px 24px;display:flex;align-items:center;gap:16px}
+.sp-conv-icon{font-size:2.5rem;opacity:.9}
+.sp-conv-title{font-size:18px;font-weight:800}
+.sp-conv-prueba{font-size:13px;opacity:.8;margin-top:3px}
+.sp-conv-body{background:#fff;padding:20px 24px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:576px){.sp-conv-body{grid-template-columns:1fr}}
+.sp-conv-item{display:flex;align-items:flex-start;gap:12px}
+.sp-conv-item i{font-size:1.3rem;color:var(--sp-primary);flex-shrink:0;margin-top:2px}
+.sp-conv-lbl{font-size:11px;font-weight:700;color:var(--sp-text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.sp-conv-val{font-size:15px;font-weight:700;color:var(--sp-accent)}
+.sp-conv-footer{background:#f0fdf4;border-top:1px solid #d1fae5;padding:12px 24px;font-size:13px;color:var(--sp-accent)}
+</style>
 </body>
 </html>

@@ -170,8 +170,13 @@
                                         (vacío = mantener actual)
                                     </span>
                                 </label>
-                                <input type="password" th:field="*{password}" class="form-control sp-form-control"
-                                       placeholder="••••••••"/>
+                                <div class="input-group">
+                                    <input type="password" id="pwdCoord" th:field="*{password}" class="form-control sp-form-control"
+                                           placeholder="••••••••"/>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePwd('pwdCoord','eyeCoord')">
+                                        <i class="bi bi-eye-fill" id="eyeCoord"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -237,6 +242,12 @@
         document.getElementById('modalTitulo').textContent = 'Nueva Coordinación';
     }
 
+    function togglePwd(inputId, iconId) {
+        const i = document.getElementById(inputId);
+        const ic = document.getElementById(iconId);
+        i.type = i.type === 'password' ? 'text' : 'password';
+        ic.className = i.type === 'password' ? 'bi bi-eye-fill' : 'bi bi-eye-slash-fill';
+    }
     // RF-06: Reset password — usar data-* attributes en lugar de th:onclick
     document.querySelectorAll('.btn-reset-pwd').forEach(btn => {
         btn.addEventListener('click', function() {

@@ -18,7 +18,8 @@
         <div th:if="${alumno != null}">
             <span class="badge fs-6 px-3 py-2"
                   th:classappend="${alumno.estadoSaberPro == 'APROBADO' ? 'bg-success' :
-                                   alumno.estadoSaberPro == 'PAGADO' ? 'bg-info' :
+                                   alumno.estadoSaberPro == 'PAGO_VERIFICADO' ? 'bg-info' :
+                                   alumno.estadoSaberPro == 'RESULTADOS_PUBLICADOS' ? 'bg-primary' :
                                    alumno.estadoSaberPro == 'PENDIENTE' ? 'bg-warning text-dark' : 'bg-secondary'}"
                   th:text="${alumno.estadoSaberPro}">Estado</span>
         </div>
@@ -28,148 +29,371 @@
     <div th:if="${alumno == null}" class="sp-card p-5 text-center">
         <i class="bi bi-person-x-fill" style="font-size:3rem;color:var(--sp-text-muted)"></i>
         <h4 class="mt-3" style="color:var(--sp-accent)">No encontramos tu registro académico</h4>
-        <p class="text-muted">Comunícate con la coordinación para que registren tu información en el sistema.</p>
+        <p class="text-muted">Comunícate con la coordinación para que registren tu información.</p>
         <p class="text-muted small">Tu usuario: <code th:text="${session.usuarioEmail}">correo</code></p>
     </div>
 
     <div th:if="${alumno != null}">
 
-        <!-- Barra de progreso del proceso -->
-        <div class="sp-card mb-4">
-            <div class="sp-card-header"><span><i class="bi bi-diagram-3-fill me-2"></i>Estado de tu Proceso Saber Pro</span></div>
-            <div class="sp-card-body">
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                    <!-- Paso 1 -->
-                    <div class="text-center">
-                        <div class="sp-prog-circle sp-prog-done"><i class="bi bi-person-check-fill"></i></div>
-                        <div class="sp-prog-lbl">Registrado</div>
-                    </div>
-                    <div class="sp-prog-bar" th:classappend="${alumno.aprobadoPorCoordinacion ? ' done' : ''}"></div>
-                    <!-- Paso 2 -->
-                    <div class="text-center">
-                        <div class="sp-prog-circle" th:classappend="${alumno.aprobadoPorCoordinacion ? ' sp-prog-done' : ' sp-prog-pending'}">
-                            <i th:class="${alumno.aprobadoPorCoordinacion ? 'bi bi-clipboard-check-fill' : 'bi bi-hourglass-split'}"></i>
-                        </div>
-                        <div class="sp-prog-lbl">Aprobado</div>
-                    </div>
-                    <div class="sp-prog-bar" th:classappend="${alumno.comprobantePagoPath != null ? ' done' : ''}"></div>
-                    <!-- Paso 3 -->
-                    <div class="text-center">
-                        <div class="sp-prog-circle" th:classappend="${alumno.comprobantePagoPath != null ? ' sp-prog-done' : ' sp-prog-pending'}">
-                            <i th:class="${alumno.comprobantePagoPath != null ? 'bi bi-receipt-cutoff' : 'bi bi-credit-card'}"></i>
-                        </div>
-                        <div class="sp-prog-lbl">Pago</div>
-                    </div>
-                    <div class="sp-prog-bar" th:classappend="${alumno.resultadoUnico != null ? ' done' : ''}"></div>
-                    <!-- Paso 4 -->
-                    <div class="text-center">
-                        <div class="sp-prog-circle" th:classappend="${alumno.resultadoUnico != null ? ' sp-prog-done' : ' sp-prog-pending'}">
-                            <i th:class="${alumno.resultadoUnico != null ? 'bi bi-bar-chart-fill' : 'bi bi-bar-chart'}"></i>
-                        </div>
-                        <div class="sp-prog-lbl">Resultados</div>
-                    </div>
-                    <div class="sp-prog-bar" th:classappend="${alumno.tieneBeneficio ? ' done' : ''}"></div>
-                    <!-- Paso 5 -->
-                    <div class="text-center">
-                        <div class="sp-prog-circle" th:classappend="${alumno.tieneBeneficio ? ' sp-prog-done' : ' sp-prog-pending'}">
-                            <i th:class="${alumno.tieneBeneficio ? 'bi bi-award-fill' : 'bi bi-award'}"></i>
-                        </div>
-                        <div class="sp-prog-lbl">Beneficio</div>
-                    </div>
+        <!-- ── BANNER: Presentar Saber Pro (ancho completo, arriba) ──── -->
+        <div class="sp-presentar-card mb-4">
+            <div class="sp-presentar-left">
+                <div class="sp-presentar-icon">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <div>
+                    <div class="sp-presentar-title">Presentar Saber Pro</div>
+                    <div class="sp-presentar-type"
+                         th:text="${alumno.getTipoPruebaCalculado() == 'TYT' ? '📋 Prueba TYT — Tecnólogo' : '🎓 Saber Pro — Profesional'}">Tipo</div>
+                </div>
+            </div>
+            <div class="sp-presentar-estado-wrap">
+                <div th:if="${!alumno.aprobadoPorCoordinacion}" class="sp-presentar-estado pendiente">
+                    <i class="bi bi-hourglass-split me-2"></i>
+                    Espera la aprobación de coordinación
+                </div>
+                <div th:if="${alumno.aprobadoPorCoordinacion and !alumno.pagoVerificado}" class="sp-presentar-estado pago">
+                    <i class="bi bi-receipt me-2"></i>
+                    <a th:href="@{/estudiante/pago}" style="color:inherit;font-weight:700">Sube tu comprobante de pago →</a>
+                </div>
+                <div th:if="${alumno.pagoVerificado and alumno.resultadoUnico == null}" class="sp-presentar-estado listo">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    ✅ Pago verificado — <strong>¡Estás listo para presentar!</strong>
+                    <div style="font-size:12px;margin-top:4px;opacity:.85">Espera la convocatoria oficial de la institución.</div>
+                </div>
+                <div th:if="${alumno.resultadoUnico != null}" class="sp-presentar-estado resultado">
+                    <i class="bi bi-bar-chart-fill me-2"></i>
+                    ¡Ya presentaste! Puntaje:
+                    <strong th:text="${alumno.resultadoUnico.puntajeGlobal}">0</strong> —
+                    <a th:href="@{/estudiante/mis-resultados}" style="color:inherit;font-weight:700">Ver resultados →</a>
                 </div>
             </div>
         </div>
 
-        <!-- Accesos rápidos -->
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-lg-3">
-                <a th:href="@{/estudiante/identificacion}" class="sp-student-card">
-                    <div class="sp-sc-icon" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#2563eb"><i class="bi bi-person-vcard-fill"></i></div>
-                    <div class="sp-sc-title">Identificación</div>
-                    <div class="sp-sc-desc">Mis datos personales</div>
-                </a>
-            </div>
-            <div class="col-6 col-lg-3">
-                <a th:href="@{/estudiante/pago}" class="sp-student-card"
-                   th:classappend="${!alumno.aprobadoPorCoordinacion ? ' sp-sc-disabled' : ''}">
-                    <div class="sp-sc-icon" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#059669"><i class="bi bi-receipt"></i></div>
-                    <div class="sp-sc-title">Cargar Pago</div>
-                    <div class="sp-sc-desc">Subir comprobante</div>
-                </a>
-            </div>
-            <div class="col-6 col-lg-3">
-                <a th:href="@{/estudiante/resultado/unico}" class="sp-student-card">
-                    <div class="sp-sc-icon" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);color:#7c3aed"><i class="bi bi-clipboard-data-fill"></i></div>
-                    <div class="sp-sc-title">Resultado Único</div>
-                    <div class="sp-sc-desc">Mi puntaje individual</div>
-                </a>
-            </div>
-            <div class="col-6 col-lg-3">
-                <a th:href="@{/estudiante/resultado/total}" class="sp-student-card">
-                    <div class="sp-sc-icon" style="background:linear-gradient(135deg,#fef3c7,#fde68a);color:#d97706"><i class="bi bi-clipboard2-check-fill"></i></div>
-                    <div class="sp-sc-title">Resultados Total</div>
-                    <div class="sp-sc-desc">Historial completo</div>
-                </a>
-            </div>
-        </div>
-
-        <!-- Info rápida del alumno -->
+        <!-- ── LAYOUT 3 SECCIONES ────────────────────────────────────── -->
         <div class="row g-4">
-            <div class="col-md-6">
-                <div class="sp-card h-100">
-                    <div class="sp-card-header"><span><i class="bi bi-person-fill me-2"></i>Mis Datos</span></div>
+
+            <!-- COLUMNA 1: Progreso + Accesos + Datos (más angosta) -->
+            <div class="col-lg-4">
+
+                <!-- Barra de progreso vertical -->
+                <div class="sp-card mb-4">
+                    <div class="sp-card-header"><span><i class="bi bi-diagram-3-fill me-2"></i>Mi Proceso</span></div>
                     <div class="sp-card-body">
-                        <div class="row g-3">
-                            <div class="col-6"><div class="sp-data-field"><label>Nombre</label><p th:text="${alumno.nombreCompleto}">-</p></div></div>
-                            <div class="col-6"><div class="sp-data-field"><label>Cédula</label><p th:text="${alumno.cedula}">-</p></div></div>
-                            <div class="col-6"><div class="sp-data-field"><label>Carrera</label><p th:text="${alumno.facultadNombre}">-</p></div></div>
-                            <div class="col-6"><div class="sp-data-field"><label>Semestre</label><p th:text="${alumno.semestre + '°'}">-</p></div></div>
-                            <div class="col-6"><div class="sp-data-field"><label>Código</label><p th:text="${alumno.codigoEstudiante}">-</p></div></div>
-                            <div class="col-6"><div class="sp-data-field"><label>Email</label><p style="font-size:12px" th:text="${alumno.email}">-</p></div></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="sp-card h-100">
-                    <div class="sp-card-header"><span><i class="bi bi-award-fill me-2"></i>Beneficio Académico</span></div>
-                    <div class="sp-card-body">
-                        <div th:if="${alumno.tieneBeneficio}">
-                            <div class="text-center py-3">
-                                <i class="bi bi-award-fill" style="font-size:3rem;color:var(--sp-primary)"></i>
-                                <h5 class="mt-2" style="color:var(--sp-accent)">¡Tienes beneficio!</h5>
-                                <span class="badge bg-success fs-6 px-3 py-2" th:text="${alumno.tipoBeneficio}">tipo</span>
-                                <p class="text-muted mt-3 small">Ver detalles en <a th:href="@{/estudiante/resoluciones}">Resoluciones de Beneficios</a></p>
+                        <div class="sp-prog-v">
+                            <div class="sp-prog-v-item" th:classappend="${true ? ' done' : ''}">
+                                <div class="sp-prog-v-dot done"><i class="bi bi-person-check-fill"></i></div>
+                                <div class="sp-prog-v-info"><div class="sp-prog-v-title">Registrado</div><div class="sp-prog-v-sub">En el sistema ✓</div></div>
+                            </div>
+                            <div class="sp-prog-v-item">
+                                <div class="sp-prog-v-dot" th:classappend="${alumno.aprobadoPorCoordinacion ? ' done' : ' pending'}">
+                                    <i th:class="${alumno.aprobadoPorCoordinacion ? 'bi bi-clipboard-check-fill' : 'bi bi-hourglass-split'}"></i>
+                                </div>
+                                <div class="sp-prog-v-info">
+                                    <div class="sp-prog-v-title">Aprobado coordinación</div>
+                                    <div class="sp-prog-v-sub" th:text="${alumno.aprobadoPorCoordinacion ? 'Aprobado ✓' : 'En revisión...'}">-</div>
+                                </div>
+                            </div>
+                            <div class="sp-prog-v-item">
+                                <div class="sp-prog-v-dot" th:classappend="${alumno.comprobantePagoPath != null ? ' done' : ' pending'}">
+                                    <i th:class="${alumno.comprobantePagoPath != null ? 'bi bi-receipt-cutoff' : 'bi bi-receipt'}"></i>
+                                </div>
+                                <div class="sp-prog-v-info">
+                                    <div class="sp-prog-v-title">Comprobante cargado</div>
+                                    <div class="sp-prog-v-sub" th:text="${alumno.comprobantePagoPath != null ? 'Cargado ✓' : 'Pendiente'}">-</div>
+                                </div>
+                            </div>
+                            <div class="sp-prog-v-item">
+                                <div class="sp-prog-v-dot" th:classappend="${alumno.pagoVerificado ? ' done' : ' pending'}">
+                                    <i th:class="${alumno.pagoVerificado ? 'bi bi-shield-check-fill' : 'bi bi-shield'}"></i>
+                                </div>
+                                <div class="sp-prog-v-info">
+                                    <div class="sp-prog-v-title">Pago verificado</div>
+                                    <div class="sp-prog-v-sub" th:text="${alumno.pagoVerificado ? 'Verificado ✓' : 'Pendiente revisión'}">-</div>
+                                </div>
+                            </div>
+                            <div class="sp-prog-v-item">
+                                <div class="sp-prog-v-dot" th:classappend="${alumno.resultadoUnico != null ? ' done' : ' pending'}">
+                                    <i th:class="${alumno.resultadoUnico != null ? 'bi bi-bar-chart-fill' : 'bi bi-bar-chart'}"></i>
+                                </div>
+                                <div class="sp-prog-v-info">
+                                    <div class="sp-prog-v-title">Resultados publicados</div>
+                                    <div class="sp-prog-v-sub" th:text="${alumno.resultadoUnico != null ? 'Disponibles ✓' : 'Aún no disponibles'}">-</div>
+                                </div>
+                            </div>
+                            <div class="sp-prog-v-item last">
+                                <div class="sp-prog-v-dot" th:classappend="${alumno.tieneBeneficio ? ' done gold' : ' pending'}">
+                                    <i th:class="${alumno.tieneBeneficio ? 'bi bi-award-fill' : 'bi bi-award'}"></i>
+                                </div>
+                                <div class="sp-prog-v-info">
+                                    <div class="sp-prog-v-title">Beneficio académico</div>
+                                    <div class="sp-prog-v-sub" th:text="${alumno.tieneBeneficio ? alumno.tipoBeneficio : 'Sin asignar'}">-</div>
+                                </div>
                             </div>
                         </div>
-                        <div th:unless="${alumno.tieneBeneficio}" class="text-center py-3">
-                            <i class="bi bi-info-circle-fill" style="font-size:2.5rem;color:var(--sp-text-muted)"></i>
-                            <p class="mt-2 text-muted">Aún no tienes beneficio asignado.<br/>Consulta las <a th:href="@{/estudiante/resoluciones}">resoluciones vigentes</a>.</p>
+                    </div>
+                </div>
+
+                <!-- Accesos rápidos -->
+                <div class="sp-card">
+                    <div class="sp-card-header"><span><i class="bi bi-lightning-fill me-2"></i>Accesos Rápidos</span></div>
+                    <div class="sp-card-body d-flex flex-column gap-2 p-3">
+                        <a th:href="@{/estudiante/identificacion}" class="sp-quick-btn">
+                            <i class="bi bi-person-vcard-fill" style="color:#2563eb"></i><span>Mi Identificación</span>
+                        </a>
+                        <a th:href="@{/estudiante/pago}"
+                           class="sp-quick-btn"
+                           th:classappend="${!alumno.aprobadoPorCoordinacion ? ' disabled' : ''}">
+                            <i class="bi bi-receipt" style="color:#059669"></i><span>Cargue de Pago</span>
+                        </a>
+                        <a th:href="@{/estudiante/resultado/unico}" class="sp-quick-btn">
+                            <i class="bi bi-clipboard-data-fill" style="color:#7c3aed"></i><span>Resultado Único</span>
+                        </a>
+                        <a th:href="@{/estudiante/resultado/total}" class="sp-quick-btn">
+                            <i class="bi bi-clipboard2-check-fill" style="color:#d97706"></i><span>Resultados Total</span>
+                        </a>
+                        <a th:href="@{/estudiante/resoluciones}" class="sp-quick-btn">
+                            <i class="bi bi-award-fill" style="color:#0d9488"></i><span>Beneficios</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA 2: Datos + Beneficio -->
+            <div class="col-lg-4">
+
+                <div class="sp-card mb-4">
+                    <div class="sp-card-header"><span><i class="bi bi-person-fill me-2"></i>Mis Datos</span></div>
+                    <div class="sp-card-body">
+                        <div class="sp-info-tiles">
+                            <div class="sp-info-tile full"><div class="sp-it-label">Nombre completo</div><div class="sp-it-val" th:text="${alumno.nombreCompleto}">-</div></div>
+                            <div class="sp-info-tile"><div class="sp-it-label">Cédula</div><div class="sp-it-val" th:text="${alumno.cedula}">-</div></div>
+                            <div class="sp-info-tile"><div class="sp-it-label">Semestre</div><div class="sp-it-val" th:text="${alumno.semestre != null ? alumno.semestre + '°' : '—'}">-</div></div>
+                            <div class="sp-info-tile full"><div class="sp-it-label">Carrera</div><div class="sp-it-val" style="font-size:12px" th:text="${alumno.facultadNombre}">-</div></div>
+                            <div class="sp-info-tile full"><div class="sp-it-label">Tipo de prueba</div>
+                                <div class="sp-it-val">
+                                    <span class="sp-prueba-badge"
+                                          th:classappend="${alumno.getTipoPruebaCalculado() == 'TYT' ? ' badge-tyt' : ' badge-saberpro'}"
+                                          th:text="${alumno.getTipoPruebaCalculado() == 'TYT' ? 'Prueba TYT — Tecnólogo' : 'Saber Pro — Profesional'}">-</span>
+                                </div>
+                            </div>
+                            <div class="sp-info-tile full" th:if="${alumno.creditosCursados != null}">
+                                <div class="sp-it-label">Créditos cursados</div>
+                                <div class="sp-it-val" th:text="${alumno.creditosCursados + ' / ' + alumno.creditosTotalesPrograma}">-</div>
+                                <div style="height:6px;background:#e5e7eb;border-radius:3px;margin-top:6px;overflow:hidden">
+                                    <div th:style="'width:' + ${alumno.calcularPorcentajeCreditos() > 100 ? 100 : alumno.calcularPorcentajeCreditos()} + '%;height:100%;background:' + ${alumno.cumpleRequisitoCreditos() ? '#059669' : '#dc2626'} + ';border-radius:3px'"></div>
+                                </div>
+                                <div style="font-size:11px;margin-top:4px"
+                                     th:classappend="${alumno.cumpleRequisitoCreditos() ? ' text-success' : ' text-danger'}"
+                                     th:text="${#numbers.formatDecimal(alumno.calcularPorcentajeCreditos(),1,1)} + '% (' + ${alumno.cumpleRequisitoCreditos() ? '✅ Cumple el 75%' : '❌ Faltan ' + alumno.creditosFaltantes() + ' créditos'} + ')'">-</div>
+                            </div>
+                            <div class="sp-info-tile full"><div class="sp-it-label">Email</div><div class="sp-it-val" style="font-size:11px" th:text="${alumno.email}">-</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Beneficio -->
+                <div class="sp-card" th:if="${alumno.tieneBeneficio}">
+                    <div class="sp-card-header" style="background:linear-gradient(135deg,#d1fae5,#fff)">
+                        <span style="color:var(--sp-accent)"><i class="bi bi-award-fill me-2" style="color:var(--sp-primary)"></i>Beneficio Asignado</span>
+                    </div>
+                    <div class="sp-card-body text-center py-3">
+                        <i class="bi bi-award-fill" style="font-size:2.2rem;color:var(--sp-primary)"></i>
+                        <div class="mt-2 fw-bold" style="color:var(--sp-accent)">¡Tienes beneficio!</div>
+                        <span class="badge bg-success px-3 py-2 mt-1 mb-2" th:text="${alumno.tipoBeneficio}">tipo</span>
+                        <div><a th:href="@{/estudiante/resoluciones}" style="font-size:12px">Ver resolución completa →</a></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA 3: Guía de estudio -->
+            <div class="col-lg-4" id="guia">
+                <div class="sp-card" style="height:100%">
+                    <div class="sp-card-header" style="background:linear-gradient(135deg,#ede9fe,#fff)">
+                        <span style="color:#5b21b6"><i class="bi bi-book-fill me-2"></i>Guía de Estudio</span>
+                        <span class="badge" style="background:#7c3aed"
+                              th:text="${alumno.getTipoPruebaCalculado() == 'TYT' ? 'TYT' : 'Saber Pro'}">tipo</span>
+                    </div>
+                    <div class="sp-card-body p-0">
+                        <ul class="nav nav-tabs px-3 pt-2" style="border-bottom:1px solid #ede9fe">
+                            <li class="nav-item"><button class="nav-link active sp-study-tab" data-bs-toggle="tab" data-bs-target="#tabGeneral">📚 Recursos</button></li>
+                            <li class="nav-item"><button class="nav-link sp-study-tab" data-bs-toggle="tab" data-bs-target="#tabVideos">🎥 Videos</button></li>
+                            <li class="nav-item"><button class="nav-link sp-study-tab" data-bs-toggle="tab" data-bs-target="#tabTips">💡 Tips</button></li>
+                            <li class="nav-item"><button class="nav-link sp-study-tab" data-bs-toggle="tab" data-bs-target="#tabSimulacros">📝 Simul.</button></li>
+                        </ul>
+                        <div class="tab-content p-3">
+                            <!-- RECURSOS -->
+                            <div class="tab-pane fade show active" id="tabGeneral">
+                                <div class="sp-resource-list">
+                                    <a href="https://www.icfes.gov.co/saber-pro" target="_blank" class="sp-resource-item">
+                                        <div class="sp-res-icon" style="background:#dbeafe;color:#1d4ed8"><i class="bi bi-globe2"></i></div>
+                                        <div><div class="sp-res-title">ICFES — Saber Pro oficial</div><div class="sp-res-sub">Fechas, estructura y guías</div></div>
+                                        <i class="bi bi-arrow-up-right-square ms-auto" style="color:#d1d5db"></i>
+                                    </a>
+                                    <a href="https://www.icfes.gov.co/saber-tyt" target="_blank" class="sp-resource-item">
+                                        <div class="sp-res-icon" style="background:#d1fae5;color:#065f46"><i class="bi bi-mortarboard-fill"></i></div>
+                                        <div><div class="sp-res-title">ICFES — Saber TYT oficial</div><div class="sp-res-sub">Guía para tecnólogos</div></div>
+                                        <i class="bi bi-arrow-up-right-square ms-auto" style="color:#d1d5db"></i>
+                                    </a>
+                                    <a href="https://www.icfes.gov.co/documents/20143/193557/Guia+de+orientacion+modulos+de+competencias+genericas+saber+pro+2019.pdf" target="_blank" class="sp-resource-item">
+                                        <div class="sp-res-icon" style="background:#fee2e2;color:#dc2626"><i class="bi bi-file-earmark-pdf-fill"></i></div>
+                                        <div><div class="sp-res-title">Guía de competencias genéricas</div><div class="sp-res-sub">PDF oficial ICFES</div></div>
+                                        <i class="bi bi-download ms-auto" style="color:#d1d5db"></i>
+                                    </a>
+                                    <a href="https://www.icfes.gov.co/ex-estudiantes-icfes/simulacros-de-examen" target="_blank" class="sp-resource-item">
+                                        <div class="sp-res-icon" style="background:#fef3c7;color:#b45309"><i class="bi bi-pencil-square"></i></div>
+                                        <div><div class="sp-res-title">Simulacros oficiales ICFES</div><div class="sp-res-sub">Preguntas reales de exámenes</div></div>
+                                        <i class="bi bi-arrow-up-right-square ms-auto" style="color:#d1d5db"></i>
+                                    </a>
+                                    <a href="https://www.colombiaaprende.edu.co" target="_blank" class="sp-resource-item">
+                                        <div class="sp-res-icon" style="background:#ede9fe;color:#6d28d9"><i class="bi bi-laptop-fill"></i></div>
+                                        <div><div class="sp-res-title">Colombia Aprende — MEN</div><div class="sp-res-sub">Recursos educativos gratuitos</div></div>
+                                        <i class="bi bi-arrow-up-right-square ms-auto" style="color:#d1d5db"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <!-- VIDEOS -->
+                            <div class="tab-pane fade" id="tabVideos">
+                                <div class="sp-resource-list">
+                                    <a href="https://www.youtube.com/results?search_query=preparacion+saber+pro+razonamiento+cuantitativo" target="_blank" class="sp-resource-item">
+                                        <div class="sp-res-icon sp-yt"><i class="bi bi-youtube"></i></div>
+                                        <div><div class="sp-res-title">Razonamiento Cuantitativo</div><div class="sp-res-sub">Matemáticas y lógica</div></div>
+                                        <i class="bi bi-play-circle-fill ms-auto" style="color:#dc2626"></i>
+                                    </a>
+                                    <a href="https://www.youtube.com/results?search_query=preparacion+saber+pro+lectura+critica" target="_blank" class="sp-resource-item">
+                                        <div class="sp-res-icon sp-yt"><i class="bi bi-youtube"></i></div>
+                                        <div><div class="sp-res-title">Lectura Crítica</div><div class="sp-res-sub">Comprensión y análisis de textos</div></div>
+                                        <i class="bi bi-play-circle-fill ms-auto" style="color:#dc2626"></i>
+                                    </a>
+                                    <a href="https://www.youtube.com/results?search_query=competencias+ciudadanas+saber+pro" target="_blank" class="sp-resource-item">
+                                        <div class="sp-res-icon sp-yt"><i class="bi bi-youtube"></i></div>
+                                        <div><div class="sp-res-title">Competencias Ciudadanas</div><div class="sp-res-sub">Convivencia y constitución</div></div>
+                                        <i class="bi bi-play-circle-fill ms-auto" style="color:#dc2626"></i>
+                                    </a>
+                                    <a href="https://www.youtube.com/results?search_query=comunicacion+escrita+saber+pro" target="_blank" class="sp-resource-item">
+                                        <div class="sp-res-icon sp-yt"><i class="bi bi-youtube"></i></div>
+                                        <div><div class="sp-res-title">Comunicación Escrita</div><div class="sp-res-sub">Redacción y estructura</div></div>
+                                        <i class="bi bi-play-circle-fill ms-auto" style="color:#dc2626"></i>
+                                    </a>
+                                    <a href="https://www.youtube.com/results?search_query=ingles+saber+pro+B1+B2+preparacion" target="_blank" class="sp-resource-item">
+                                        <div class="sp-res-icon sp-yt"><i class="bi bi-youtube"></i></div>
+                                        <div><div class="sp-res-title">Inglés B1 / B2</div><div class="sp-res-sub">Preparación módulo inglés</div></div>
+                                        <i class="bi bi-play-circle-fill ms-auto" style="color:#dc2626"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <!-- TIPS -->
+                            <div class="tab-pane fade" id="tabTips">
+                                <div class="sp-tip-list">
+                                    <div class="sp-tip-item"><div class="sp-tip-num">1</div><div><div class="sp-tip-title">Practica con tiempo límite</div><div class="sp-tip-desc">Cada módulo tiene tiempo fijo. Entrena contra el reloj.</div></div></div>
+                                    <div class="sp-tip-item"><div class="sp-tip-num">2</div><div><div class="sp-tip-title">Lee los textos completos</div><div class="sp-tip-desc">En Lectura Crítica nunca respondas sin leer todo el texto.</div></div></div>
+                                    <div class="sp-tip-item"><div class="sp-tip-num">3</div><div><div class="sp-tip-title">Enfócate en tu módulo específico</div><div class="sp-tip-desc">Tiene mayor peso. Estudia los temas de tu carrera.</div></div></div>
+                                    <div class="sp-tip-item"><div class="sp-tip-num">4</div><div><div class="sp-tip-title">No dejes sin responder</div><div class="sp-tip-desc">No hay penalización. Si no sabes, elimina opciones y marca.</div></div></div>
+                                    <div class="sp-tip-item"><div class="sp-tip-num">5</div><div><div class="sp-tip-title">Descansa bien el día anterior</div><div class="sp-tip-desc">7-8 horas de sueño mejoran tu rendimiento cognitivo.</div></div></div>
+                                    <div class="sp-tip-item last"><div class="sp-tip-num">6</div><div><div class="sp-tip-title">Lleva tu cédula original</div><div class="sp-tip-desc">Sin documento no puedes ingresar al lugar de examen.</div></div></div>
+                                </div>
+                            </div>
+                            <!-- SIMULACROS -->
+                            <div class="tab-pane fade" id="tabSimulacros">
+                                <div class="sp-resource-list">
+                                    <a href="https://www.icfes.gov.co/ex-estudiantes-icfes/simulacros-de-examen" target="_blank" class="sp-resource-item">
+                                        <div class="sp-res-icon" style="background:#dbeafe;color:#1d4ed8"><i class="bi bi-pencil-fill"></i></div>
+                                        <div><div class="sp-res-title">Simulacro oficial ICFES</div><div class="sp-res-sub">Preguntas de exámenes anteriores</div></div>
+                                        <i class="bi bi-arrow-up-right-square ms-auto" style="color:#d1d5db"></i>
+                                    </a>
+                                    <a href="https://aprende.colombiaaprende.edu.co" target="_blank" class="sp-resource-item">
+                                        <div class="sp-res-icon" style="background:#d1fae5;color:#065f46"><i class="bi bi-laptop-fill"></i></div>
+                                        <div><div class="sp-res-title">Colombia Aprende</div><div class="sp-res-sub">Cursos y ejercicios gratuitos</div></div>
+                                        <i class="bi bi-arrow-up-right-square ms-auto" style="color:#d1d5db"></i>
+                                    </a>
+                                    <a href="https://es.khanacademy.org" target="_blank" class="sp-resource-item">
+                                        <div class="sp-res-icon" style="background:#fef3c7;color:#b45309"><i class="bi bi-calculator-fill"></i></div>
+                                        <div><div class="sp-res-title">Khan Academy</div><div class="sp-res-sub">Razonamiento cuantitativo gratis</div></div>
+                                        <i class="bi bi-arrow-up-right-square ms-auto" style="color:#d1d5db"></i>
+                                    </a>
+                                    <a href="https://quizlet.com/subject/saber-pro" target="_blank" class="sp-resource-item">
+                                        <div class="sp-res-icon" style="background:#ede9fe;color:#6d28d9"><i class="bi bi-card-list"></i></div>
+                                        <div><div class="sp-res-title">Quizlet — Saber Pro</div><div class="sp-res-sub">Flashcards de estudiantes</div></div>
+                                        <i class="bi bi-arrow-up-right-square ms-auto" style="color:#d1d5db"></i>
+                                    </a>
+                                    <a href="https://www.duolingo.com" target="_blank" class="sp-resource-item">
+                                        <div class="sp-res-icon" style="background:#d1fae5;color:#059669"><i class="bi bi-translate"></i></div>
+                                        <div><div class="sp-res-title">Duolingo — Inglés</div><div class="sp-res-sub">Practica inglés todos los días</div></div>
+                                        <i class="bi bi-arrow-up-right-square ms-auto" style="color:#d1d5db"></i>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+
+        </div><!-- fin row 3 cols -->
+    </div><!-- fin alumno != null -->
 
 </main>
 </div>
 <div th:replace="~{fragments/layout :: scripts}"></div>
 <style>
-.sp-prog-circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 8px;border:2px solid var(--sp-border)}
-.sp-prog-done{background:var(--sp-primary);color:#fff;border-color:var(--sp-primary)}
-.sp-prog-pending{background:#f3f4f6;color:var(--sp-text-muted);border-color:var(--sp-border)}
-.sp-prog-bar{flex:1;height:4px;background:var(--sp-border);border-radius:2px;min-width:20px;max-width:80px}
-.sp-prog-bar.done{background:var(--sp-primary)}
-.sp-prog-lbl{font-size:11px;font-weight:600;color:var(--sp-text-muted)}
-.sp-student-card{display:block;background:#fff;border:1.5px solid var(--sp-border-soft);border-radius:var(--sp-radius);padding:20px;text-align:center;text-decoration:none;color:var(--sp-text);transition:all .2s}
-.sp-student-card:hover{transform:translateY(-3px);box-shadow:var(--sp-shadow-md);border-color:var(--sp-primary);color:var(--sp-text)}
-.sp-student-card.sp-sc-disabled{opacity:.5;pointer-events:none;filter:grayscale(1)}
-.sp-sc-icon{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 12px}
-.sp-sc-title{font-weight:700;font-size:14px;margin-bottom:4px}
-.sp-sc-desc{font-size:12px;color:var(--sp-text-muted)}
-.sp-data-field label{font-size:11px;font-weight:700;color:var(--sp-primary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;display:block}
-.sp-data-field p{font-size:14px;font-weight:500;margin:0;color:var(--sp-text)}
+/* Banner presentar */
+.sp-presentar-card{background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:var(--sp-radius);padding:20px 24px;color:#fff;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.sp-presentar-left{display:flex;align-items:center;gap:14px;flex-shrink:0}
+.sp-presentar-icon{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:22px}
+.sp-presentar-title{font-size:16px;font-weight:800;color:#fff}
+.sp-presentar-type{font-size:12px;color:rgba(255,255,255,.7);margin-top:2px}
+.sp-presentar-estado-wrap{flex:1}
+.sp-presentar-estado{border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600}
+.sp-presentar-estado.pendiente{background:rgba(251,191,36,.15);color:#fde68a;border:1px solid rgba(251,191,36,.3)}
+.sp-presentar-estado.pago{background:rgba(59,130,246,.15);color:#93c5fd;border:1px solid rgba(59,130,246,.3)}
+.sp-presentar-estado.listo{background:rgba(16,185,129,.15);color:#6ee7b7;border:1px solid rgba(16,185,129,.3)}
+.sp-presentar-estado.resultado{background:rgba(139,92,246,.15);color:#c4b5fd;border:1px solid rgba(139,92,246,.3)}
+
+/* Progreso vertical */
+.sp-prog-v{display:flex;flex-direction:column}
+.sp-prog-v-item{display:flex;gap:10px;align-items:flex-start;padding-bottom:12px;border-left:2px solid #e5e7eb;margin-left:15px;padding-left:14px;position:relative}
+.sp-prog-v-item.last{border-left-color:transparent}
+.sp-prog-v-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-left:-30px;border:2px solid #e5e7eb;background:#fff}
+.sp-prog-v-dot.done{background:var(--sp-primary);color:#fff;border-color:var(--sp-primary)}
+.sp-prog-v-dot.gold{background:#d97706;border-color:#d97706}
+.sp-prog-v-dot.pending{background:#f9fafb;color:#9ca3af;border-color:#e5e7eb}
+.sp-prog-v-title{font-size:12px;font-weight:600;color:var(--sp-accent);line-height:1.3}
+.sp-prog-v-sub{font-size:11px;color:var(--sp-text-muted);margin-top:1px}
+.sp-prog-v-info{padding-top:4px}
+
+/* Accesos */
+.sp-quick-btn{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border:1.5px solid var(--sp-border-soft);border-radius:8px;text-decoration:none;color:var(--sp-text);font-size:13px;font-weight:600;transition:all .15s}
+.sp-quick-btn:hover{background:var(--sp-primary-light);border-color:var(--sp-primary);color:var(--sp-accent);transform:translateX(3px)}
+.sp-quick-btn.disabled{opacity:.45;pointer-events:none}
+.sp-quick-btn i{font-size:16px;width:20px;text-align:center}
+
+/* Datos */
+.sp-info-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sp-info-tile{background:#f9fafb;border-radius:8px;padding:8px 10px}
+.sp-info-tile.full{grid-column:1/-1}
+.sp-it-label{font-size:10px;font-weight:700;color:var(--sp-primary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.sp-it-val{font-size:13px;font-weight:600;color:var(--sp-accent)}
+
+/* Guía */
+.sp-study-tab{font-size:11px;padding:5px 8px;color:var(--sp-text-muted);border:none;background:none;white-space:nowrap}
+.sp-study-tab.active{color:#7c3aed;font-weight:700;border-bottom:2px solid #7c3aed!important}
+.sp-resource-list{display:flex;flex-direction:column;gap:5px}
+.sp-resource-item{display:flex;align-items:center;gap:8px;padding:9px;border:1px solid #f3f4f6;border-radius:8px;text-decoration:none;color:var(--sp-text);transition:all .15s}
+.sp-resource-item:hover{background:#f9fafb;border-color:#d1d5db;color:var(--sp-text);transform:translateX(3px)}
+.sp-res-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.sp-res-icon.sp-yt{background:#fee2e2;color:#dc2626}
+.sp-res-title{font-size:12px;font-weight:600;color:var(--sp-accent)}
+.sp-res-sub{font-size:10px;color:var(--sp-text-muted)}
+.sp-tip-list{display:flex;flex-direction:column}
+.sp-tip-item{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #f3f4f6;align-items:flex-start}
+.sp-tip-item.last{border-bottom:none}
+.sp-tip-num{width:24px;height:24px;border-radius:50%;background:#ede9fe;color:#7c3aed;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.sp-tip-title{font-size:11px;font-weight:700;color:var(--sp-accent);margin-bottom:2px}
+.sp-tip-desc{font-size:10px;color:var(--sp-text-muted);line-height:1.4}
+
+/* Badges */
+.sp-prueba-badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.badge-tyt{background:#fef3c7;color:#92400e}
+.badge-saberpro{background:#ede9fe;color:#5b21b6}
 </style>
 </body>
 </html>

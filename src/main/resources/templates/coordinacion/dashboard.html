@@ -23,37 +23,25 @@
         <div class="col-6 col-lg-3">
             <div class="sp-metric-card sp-metric-green">
                 <div class="sp-metric-icon"><i class="bi bi-people-fill"></i></div>
-                <div class="sp-metric-body">
-                    <div class="sp-metric-val" th:text="${totalAlumnos}">0</div>
-                    <div class="sp-metric-lbl">Total Estudiantes</div>
-                </div>
+                <div class="sp-metric-body"><div class="sp-metric-val" th:text="${totalAlumnos}">0</div><div class="sp-metric-lbl">Total Estudiantes</div></div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
             <div class="sp-metric-card sp-metric-blue">
                 <div class="sp-metric-icon"><i class="bi bi-check-circle-fill"></i></div>
-                <div class="sp-metric-body">
-                    <div class="sp-metric-val" th:text="${aprobados}">0</div>
-                    <div class="sp-metric-lbl">Aprobados Saber Pro</div>
-                </div>
+                <div class="sp-metric-body"><div class="sp-metric-val" th:text="${aprobados}">0</div><div class="sp-metric-lbl">Aprobados Saber Pro</div></div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
             <div class="sp-metric-card sp-metric-amber">
                 <div class="sp-metric-icon"><i class="bi bi-hourglass-split"></i></div>
-                <div class="sp-metric-body">
-                    <div class="sp-metric-val" th:text="${pendientes}">0</div>
-                    <div class="sp-metric-lbl">Pendientes aprobación</div>
-                </div>
+                <div class="sp-metric-body"><div class="sp-metric-val" th:text="${pendientes}">0</div><div class="sp-metric-lbl">Pendientes aprobación</div></div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
             <div class="sp-metric-card sp-metric-violet">
                 <div class="sp-metric-icon"><i class="bi bi-award-fill"></i></div>
-                <div class="sp-metric-body">
-                    <div class="sp-metric-val" th:text="${conBeneficio}">0</div>
-                    <div class="sp-metric-lbl">Con beneficio</div>
-                </div>
+                <div class="sp-metric-body"><div class="sp-metric-val" th:text="${conBeneficio}">0</div><div class="sp-metric-lbl">Con beneficio</div></div>
             </div>
         </div>
     </div>
@@ -62,215 +50,295 @@
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-4 col-lg-2">
             <a th:href="@{/coordinacion/alumnos}" class="sp-coord-card">
-                <i class="bi bi-person-lines-fill" style="color:#2563eb"></i>
-                <span>Gestión Estudiantes</span>
+                <i class="bi bi-person-lines-fill" style="color:#2563eb"></i><span>Gestión Estudiantes</span>
             </a>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
             <a th:href="@{/coordinacion/aprobar}" class="sp-coord-card">
-                <i class="bi bi-check-circle-fill" style="color:var(--sp-primary)"></i>
-                <span>Aprobar Saber Pro</span>
+                <i class="bi bi-check-circle-fill" style="color:var(--sp-primary)"></i><span>Aprobar Saber Pro</span>
             </a>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
             <a th:href="@{/coordinacion/resultados}" class="sp-coord-card">
-                <i class="bi bi-bar-chart-fill" style="color:#7c3aed"></i>
-                <span>Subir Resultados</span>
+                <i class="bi bi-bar-chart-fill" style="color:#7c3aed"></i><span>Subir Resultados</span>
             </a>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
             <a th:href="@{/coordinacion/informe/alumnos(tipo='TOTAL')}" class="sp-coord-card">
-                <i class="bi bi-clipboard-data-fill" style="color:#d97706"></i>
-                <span>Informe Total</span>
+                <i class="bi bi-clipboard-data-fill" style="color:#d97706"></i><span>Informe Total</span>
             </a>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
             <a th:href="@{/coordinacion/informe/beneficios}" class="sp-coord-card">
-                <i class="bi bi-award-fill" style="color:#0d9488"></i>
-                <span>Informe Beneficios</span>
+                <i class="bi bi-award-fill" style="color:#0d9488"></i><span>Informe Beneficios</span>
             </a>
         </div>
         <div class="col-6 col-md-4 col-lg-2">
             <a th:href="@{/coordinacion/resoluciones}" class="sp-coord-card">
-                <i class="bi bi-file-earmark-ruled-fill" style="color:#e11d48"></i>
-                <span>Resoluciones</span>
+                <i class="bi bi-file-earmark-ruled-fill" style="color:#e11d48"></i><span>Resoluciones</span>
             </a>
         </div>
     </div>
 
-    <!-- TABLA: Pendientes de aprobación -->
-    <div class="sp-card mb-4">
-        <div class="sp-card-header">
-            <span><i class="bi bi-hourglass-split me-2" style="color:#d97706"></i>Estudiantes Pendientes de Aprobación</span>
-            <a th:href="@{/coordinacion/aprobar}" class="btn sp-btn-primary btn-sm">
-                <i class="bi bi-check-circle me-1"></i>Gestionar aprobaciones
-            </a>
-        </div>
-        <div class="sp-card-body p-0">
-            <div class="table-responsive">
-                <table class="table sp-table mb-0">
-                    <thead>
-                        <tr>
-                            <th>Estudiante</th><th>Cédula</th><th>Carrera</th><th>Semestre</th>
-                            <th class="text-center">Aprobar</th><th class="text-center">Rechazar</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="a : ${ultimosAlumnos}">
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="sp-avatar sp-avatar-sm"><i class="bi bi-person-fill"></i></div>
-                                    <span style="font-weight:600;font-size:13px" th:text="${a.nombreCompleto}">Nombre</span>
-                                </div>
-                            </td>
-                            <td th:text="${a.cedula}">-</td>
-                            <td style="font-size:12px" th:text="${a.facultadNombre}">-</td>
-                            <td th:text="${a.semestre + '°'}">-</td>
-                            <td class="text-center">
-                                <form th:action="@{/coordinacion/aprobar/{id}(id=${a.id})}" method="post" class="d-inline">
-                                    <button type="submit" class="btn sp-btn-primary btn-sm"><i class="bi bi-check-lg"></i></button>
-                                </form>
-                            </td>
-                            <td class="text-center">
-                                <form th:action="@{/coordinacion/rechazar/{id}(id=${a.id})}" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-x-lg"></i></button>
-                                </form>
-                            </td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(ultimosAlumnos)}">
-                            <td colspan="6">
-                                <div class="sp-empty-state py-4">
-                                    <i class="bi bi-check2-all"></i>
-                                    <p>¡Sin pendientes! Todos los estudiantes están al día.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+    <!-- LAYOUT: Columna izquierda (tablas) + columna derecha (resumen) -->
+    <div class="row g-4">
+
+        <!-- ── COLUMNA IZQUIERDA: Las 3 tablas ───────────────────────────── -->
+        <div class="col-lg-8">
+
+            <!-- TABLA 1: Pendientes de aprobación -->
+            <div class="sp-card mb-4">
+                <div class="sp-card-header">
+                    <span><i class="bi bi-hourglass-split me-2" style="color:#d97706"></i>Estudiantes Pendientes de Aprobación</span>
+                    <a th:href="@{/coordinacion/aprobar}" class="btn sp-btn-primary btn-sm">
+                        <i class="bi bi-check-circle me-1"></i>Gestionar aprobaciones
+                    </a>
+                </div>
+                <div class="sp-card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table sp-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Estudiante</th><th>Cédula</th><th>Carrera</th><th>Semestre</th>
+                                    <th class="text-center">Aprobar</th><th class="text-center">Rechazar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="a : ${ultimosAlumnos}">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="sp-avatar sp-avatar-sm"><i class="bi bi-person-fill"></i></div>
+                                            <span style="font-weight:600;font-size:13px" th:text="${a.nombreCompleto}">Nombre</span>
+                                        </div>
+                                    </td>
+                                    <td th:text="${a.cedula}">-</td>
+                                    <td style="font-size:12px" th:text="${a.facultadNombre}">-</td>
+                                    <td th:text="${a.semestre + '°'}">-</td>
+                                    <td class="text-center">
+                                        <form th:action="@{/coordinacion/aprobar/{id}(id=${a.id})}" method="post" class="d-inline">
+                                            <button type="submit" class="btn sp-btn-primary btn-sm"><i class="bi bi-check-lg"></i></button>
+                                        </form>
+                                    </td>
+                                    <td class="text-center">
+                                        <form th:action="@{/coordinacion/rechazar/{id}(id=${a.id})}" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-x-lg"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(ultimosAlumnos)}">
+                                    <td colspan="6">
+                                        <div class="sp-empty-state py-3">
+                                            <i class="bi bi-check2-all"></i>
+                                            <p>¡Sin pendientes! Todos al día.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <!-- TABLA: Comprobantes por verificar -->
-    <div class="sp-card mb-4">
-        <div class="sp-card-header">
-            <span><i class="bi bi-receipt me-2" style="color:#059669"></i>Comprobantes de Pago por Verificar</span>
-            <span class="badge bg-success fs-6 px-3"
-                  th:text="${#lists.size(conPago)} + ' pendiente(s)'">0 pendientes</span>
-        </div>
-        <div class="sp-card-body p-0">
-            <div class="table-responsive">
-                <table class="table sp-table mb-0">
-                    <thead>
-                        <tr>
-                            <th>Estudiante</th><th>Cédula</th><th>Programa</th>
-                            <th>Fecha carga</th><th class="text-center">Comprobante</th><th class="text-center">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="a : ${conPago}">
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="sp-avatar sp-avatar-sm"><i class="bi bi-person-fill"></i></div>
-                                    <div>
-                                        <span style="font-weight:600;font-size:13px;display:block" th:text="${a.nombreCompleto}">Nombre</span>
+            <!-- TABLA 2: Comprobantes de pago por verificar -->
+            <div class="sp-card mb-4">
+                <div class="sp-card-header">
+                    <span><i class="bi bi-receipt me-2" style="color:#059669"></i>Comprobantes de Pago por Verificar</span>
+                    <span class="badge bg-success fs-6 px-3"
+                          th:text="${#lists.size(conPago)} + ' pendiente(s)'">0</span>
+                </div>
+                <div class="sp-card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table sp-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Estudiante</th><th>Cédula</th><th>Programa</th>
+                                    <th>Fecha carga</th><th class="text-center">Comprobante</th><th class="text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="a : ${conPago}">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="sp-avatar sp-avatar-sm"><i class="bi bi-person-fill"></i></div>
+                                            <div>
+                                                <span style="font-weight:600;font-size:13px;display:block" th:text="${a.nombreCompleto}">Nombre</span>
+                                                <span class="sp-prueba-badge"
+                                                      th:classappend="${a.getTipoPruebaCalculado() == 'TYT' ? ' badge-tyt' : ' badge-saberpro'}"
+                                                      th:text="${a.getTipoPruebaCalculado() == 'TYT' ? 'TYT' : 'Saber Pro'}">-</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td th:text="${a.cedula}">-</td>
+                                    <td style="font-size:12px" th:text="${a.facultadNombre}">-</td>
+                                    <td style="font-size:12px"
+                                        th:text="${a.fechaCargoPago != null ? #temporals.format(a.fechaCargoPago,'dd/MM/yyyy HH:mm') : '-'}">-</td>
+                                    <td class="text-center">
+                                        <!-- Ver y descargar comprobante -->
+                                        <span th:if="${a.comprobantePagoPath != null}" class="d-flex gap-1 justify-content-center">
+                                            <a th:href="@{'/' + ${a.comprobantePagoPath}}" target="_blank"
+                                               class="btn btn-sm btn-outline-success" title="Ver comprobante">
+                                                <i class="bi bi-eye-fill me-1"></i>Ver
+                                            </a>
+                                            <a th:href="@{'/' + ${a.comprobantePagoPath}}" download
+                                               class="btn btn-sm btn-outline-secondary" title="Descargar">
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                        </span>
+                                        <span th:unless="${a.comprobantePagoPath != null}" class="text-muted small">Sin archivo</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <form th:action="@{/coordinacion/verificar-pago/{id}(id=${a.id})}" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="bi bi-check-lg me-1"></i>Verificar pago
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(conPago)}">
+                                    <td colspan="6">
+                                        <div class="sp-empty-state py-3">
+                                            <i class="bi bi-check2-all"></i>
+                                            <p>No hay comprobantes pendientes.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABLA 3: Pago verificado → esperando resultados -->
+            <div class="sp-card">
+                <div class="sp-card-header">
+                    <span><i class="bi bi-mortarboard-fill me-2" style="color:#7c3aed"></i>Pago Verificado — Pendientes de Resultados</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge fs-6 px-3" style="background:#7c3aed"
+                              th:text="${#lists.size(pagoVerificado)} + ' estudiante(s)'">0</span>
+                        <a th:href="@{/coordinacion/resultados}" class="btn btn-sm sp-btn-primary">
+                            <i class="bi bi-bar-chart-fill me-1"></i>Gestionar resultados
+                        </a>
+                    </div>
+                </div>
+                <div class="sp-card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table sp-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Estudiante</th><th>Tipo de prueba</th><th>Programa</th>
+                                    <th>Pago verificado</th><th class="text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="a : ${pagoVerificado}">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="sp-avatar sp-avatar-sm"><i class="bi bi-person-fill"></i></div>
+                                            <span style="font-weight:600;font-size:13px" th:text="${a.nombreCompleto}">Nombre</span>
+                                        </div>
+                                    </td>
+                                    <td>
                                         <span class="sp-prueba-badge"
-                                              th:classappend="${a.getTipoPruebaCalculado() == 'TYT' ? ' badge-tyt' : ' badge-saberpro'}"
-                                              th:text="${a.getTipoPruebaCalculado() == 'TYT' ? 'TYT' : 'Saber Pro'}">-</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td th:text="${a.cedula}">-</td>
-                            <td style="font-size:12px" th:text="${a.facultadNombre}">-</td>
-                            <td style="font-size:12px"
-                                th:text="${a.fechaCargoPago != null ? #temporals.format(a.fechaCargoPago, 'dd/MM/yyyy HH:mm') : '-'}">-</td>
-                            <td class="text-center">
-                                <a th:if="${a.comprobantePagoPath != null}"
-                                   th:href="@{'/' + ${a.comprobantePagoPath}}" target="_blank"
-                                   class="btn btn-sm btn-outline-success">
-                                    <i class="bi bi-file-earmark-image me-1"></i>Ver archivo
-                                </a>
-                                <span th:unless="${a.comprobantePagoPath != null}" class="text-muted small">Sin archivo</span>
-                            </td>
-                            <td class="text-center">
-                                <form th:action="@{/coordinacion/verificar-pago/{id}(id=${a.id})}" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-success">
-                                        <i class="bi bi-check-lg me-1"></i>Verificar pago
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(conPago)}">
-                            <td colspan="6">
-                                <div class="sp-empty-state py-4">
-                                    <i class="bi bi-check2-all"></i>
-                                    <p>No hay comprobantes pendientes de verificación.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                                              th:classappend="${a.tipoPrueba == 'TYT' ? ' badge-tyt' : ' badge-saberpro'}"
+                                              th:text="${a.tipoPrueba == 'TYT' ? 'Prueba TYT' : 'Saber Pro'}">-</span>
+                                    </td>
+                                    <td style="font-size:12px" th:text="${a.facultadNombre}">-</td>
+                                    <td style="font-size:12px"
+                                        th:text="${a.fechaVerificacionPago != null ? #temporals.format(a.fechaVerificacionPago,'dd/MM/yyyy') : '-'}">-</td>
+                                    <td class="text-center">
+                                        <a th:href="@{/coordinacion/resultados}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-upload me-1"></i>Subir resultados
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(pagoVerificado)}">
+                                    <td colspan="5">
+                                        <div class="sp-empty-state py-3">
+                                            <i class="bi bi-hourglass"></i>
+                                            <p>No hay estudiantes esperando resultados.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
+        </div><!-- fin col-lg-8 -->
 
-    <!-- TABLA: Pago verificado → esperando subir resultados -->
-    <div class="sp-card">
-        <div class="sp-card-header">
-            <span><i class="bi bi-mortarboard-fill me-2" style="color:#7c3aed"></i>Pago Verificado — Pendientes de Resultados</span>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-purple fs-6 px-3"
-                      th:text="${#lists.size(pagoVerificado)} + ' estudiante(s)'"
-                      style="background:#7c3aed!important">0 estudiantes</span>
-                <a th:href="@{/coordinacion/resultados}" class="btn btn-sm sp-btn-primary">
-                    <i class="bi bi-bar-chart-fill me-1"></i>Gestionar resultados
-                </a>
+        <!-- ── COLUMNA DERECHA: Resumen y estado ─────────────────────────── -->
+        <div class="col-lg-4">
+
+            <!-- Resumen del proceso -->
+            <div class="sp-card mb-4">
+                <div class="sp-card-header">
+                    <span><i class="bi bi-activity me-2"></i>Estado del Proceso</span>
+                </div>
+                <div class="sp-card-body">
+                    <div class="sp-process-list">
+                        <div class="sp-proc-item">
+                            <div class="sp-proc-dot" style="background:#2563eb"><i class="bi bi-hourglass-split"></i></div>
+                            <div class="sp-proc-info">
+                                <div class="sp-proc-label">Pendientes de aprobación</div>
+                                <div class="sp-proc-val" th:text="${pendientes}">0</div>
+                            </div>
+                        </div>
+                        <div class="sp-proc-item">
+                            <div class="sp-proc-dot" style="background:var(--sp-primary)"><i class="bi bi-check-circle-fill"></i></div>
+                            <div class="sp-proc-info">
+                                <div class="sp-proc-label">Aprobados</div>
+                                <div class="sp-proc-val" th:text="${aprobados}">0</div>
+                            </div>
+                        </div>
+                        <div class="sp-proc-item">
+                            <div class="sp-proc-dot" style="background:#d97706"><i class="bi bi-receipt"></i></div>
+                            <div class="sp-proc-info">
+                                <div class="sp-proc-label">Con comprobante por verificar</div>
+                                <div class="sp-proc-val" th:text="${#lists.size(conPago)}">0</div>
+                            </div>
+                        </div>
+                        <div class="sp-proc-item">
+                            <div class="sp-proc-dot" style="background:#7c3aed"><i class="bi bi-mortarboard-fill"></i></div>
+                            <div class="sp-proc-info">
+                                <div class="sp-proc-label">Esperando resultados</div>
+                                <div class="sp-proc-val" th:text="${#lists.size(pagoVerificado)}">0</div>
+                            </div>
+                        </div>
+                        <div class="sp-proc-item">
+                            <div class="sp-proc-dot" style="background:#16a34a"><i class="bi bi-award-fill"></i></div>
+                            <div class="sp-proc-info">
+                                <div class="sp-proc-label">Con beneficio</div>
+                                <div class="sp-proc-val" th:text="${conBeneficio}">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="sp-card-body p-0">
-            <div class="table-responsive">
-                <table class="table sp-table mb-0">
-                    <thead>
-                        <tr>
-                            <th>Estudiante</th><th>Tipo de prueba</th><th>Programa</th>
-                            <th>Pago verificado</th><th class="text-center">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="a : ${pagoVerificado}">
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="sp-avatar sp-avatar-sm"><i class="bi bi-person-fill"></i></div>
-                                    <span style="font-weight:600;font-size:13px" th:text="${a.nombreCompleto}">Nombre</span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="sp-prueba-badge"
-                                      th:classappend="${a.tipoPrueba == 'TYT' ? ' badge-tyt' : ' badge-saberpro'}"
-                                      th:text="${a.tipoPrueba == 'TYT' ? 'Prueba TYT' : 'Saber Pro'}">-</span>
-                            </td>
-                            <td style="font-size:12px" th:text="${a.facultadNombre}">-</td>
-                            <td style="font-size:12px"
-                                th:text="${a.fechaVerificacionPago != null ? #temporals.format(a.fechaVerificacionPago,'dd/MM/yyyy') : '-'}">-</td>
-                            <td class="text-center">
-                                <a th:href="@{/coordinacion/resultados}" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-upload me-1"></i>Subir resultados
-                                </a>
-                            </td>
-                        </tr>
-                        <tr th:if="${#lists.isEmpty(pagoVerificado)}">
-                            <td colspan="5">
-                                <div class="sp-empty-state py-4">
-                                    <i class="bi bi-hourglass"></i>
-                                    <p>No hay estudiantes esperando resultados.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+
+            <!-- Acciones rápidas verticales -->
+            <div class="sp-card">
+                <div class="sp-card-header"><span><i class="bi bi-lightning-fill me-2"></i>Acciones Rápidas</span></div>
+                <div class="sp-card-body d-flex flex-column gap-2">
+                    <a th:href="@{/coordinacion/alumnos}" class="btn sp-btn-primary w-100 text-start">
+                        <i class="bi bi-person-plus-fill me-2"></i>Registrar Estudiante
+                    </a>
+                    <a th:href="@{/coordinacion/aprobar}" class="btn sp-btn-outline w-100 text-start">
+                        <i class="bi bi-check2-circle me-2"></i>Gestionar Aprobaciones
+                    </a>
+                    <a th:href="@{/coordinacion/resultados}" class="btn sp-btn-outline w-100 text-start">
+                        <i class="bi bi-bar-chart-fill me-2"></i>Subir Resultados
+                    </a>
+                    <a th:href="@{/coordinacion/informe/alumnos}" class="btn sp-btn-outline w-100 text-start">
+                        <i class="bi bi-file-earmark-text me-2"></i>Ver Informes
+                    </a>
+                    <a th:href="@{/coordinacion/resoluciones}" class="btn sp-btn-outline w-100 text-start">
+                        <i class="bi bi-file-earmark-ruled-fill me-2"></i>Resoluciones
+                    </a>
+                </div>
             </div>
-        </div>
-    </div>
+
+        </div><!-- fin col-lg-4 -->
+    </div><!-- fin row -->
 
 </main>
 </div>
@@ -282,6 +350,14 @@
 .sp-prueba-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.3px}
 .badge-tyt{background:#fef3c7;color:#92400e}
 .badge-saberpro{background:#ede9fe;color:#5b21b6}
+/* Process list */
+.sp-process-list{display:flex;flex-direction:column;gap:0}
+.sp-proc-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--sp-border-soft)}
+.sp-proc-item:last-child{border-bottom:none}
+.sp-proc-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;flex-shrink:0}
+.sp-proc-label{font-size:12px;color:var(--sp-text-muted);font-weight:500}
+.sp-proc-val{font-size:20px;font-weight:800;color:var(--sp-accent);line-height:1.2}
+.sp-proc-info{flex:1}
 </style>
 </body>
 </html>

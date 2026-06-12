@@ -67,88 +67,134 @@
                         <button class="btn sp-btn-primary w-100 mt-3"
                                 type="button"
                                 data-bs-toggle="collapse"
-                                th:data-bs-target="'#form-' + ${a.id}">
+                                th:attr="data-bs-target='#form-' + ${a.id}">
                             <i class="bi bi-upload me-2"></i>Subir resultados
                         </button>
 
                         <!-- Formulario colapsable -->
-                        <div class="collapse mt-3" th:id="'form-' + ${a.id}">
-                            <form th:action="@{/coordinacion/resultados/subir/{id}(id=${a.id})}" method="post">
+                        <!-- ✅ th:id con th:attr para evitar problemas de parsing -->
+                        <div class="collapse mt-3 res-form-collapse" th:attr="id='form-' + ${a.id}">
+                            <form method="post"
+                                  class="res-form"
+                                  th:attr="action=@{/coordinacion/resultados/publicar/{id}(id=${a.id})},data-id=${a.id}">
+
+                                <!-- Info general -->
                                 <div class="sp-form-section">
                                     <div class="sp-form-section-title">Información general</div>
                                     <div class="row g-2">
                                         <div class="col-6">
                                             <label class="sp-label">Fecha de presentación</label>
-                                            <input type="date" name="fechaPresentacion" class="sp-input" required/>
+                                            <!-- ✅ SIN th:onchange — el JS usa event delegation -->
+                                            <input type="date" name="fechaPresentacion"
+                                                   class="sp-input res-fecha"
+                                                   required/>
                                         </div>
                                         <div class="col-6">
-                                            <label class="sp-label">Período</label>
-                                            <input type="text" name="periodo" class="sp-input" placeholder="Ej: 2025-2" required/>
+                                            <label class="sp-label">
+                                                Período
+                                                <span style="font-size:9px;color:#059669;font-weight:400">⚡ automático</span>
+                                            </label>
+                                            <input type="text" name="periodo"
+                                                   class="sp-input res-periodo"
+                                                   placeholder="Automático según fecha"
+                                                   readonly
+                                                   style="background:#f0fdf4;font-weight:700;color:var(--sp-accent)"
+                                                   required/>
                                         </div>
                                     </div>
                                 </div>
 
+                                <!-- Puntajes -->
                                 <div class="sp-form-section">
                                     <div class="sp-form-section-title">Puntajes por componente</div>
                                     <div class="row g-2">
                                         <div class="col-6">
                                             <label class="sp-label">Razonamiento cuantitativo</label>
-                                            <input type="number" step="0.1" min="0" max="300" name="razonamientoCuantitativo" class="sp-input" required/>
+                                            <input type="number" step="0.1" min="0" max="300"
+                                                   name="razonCuantitativo"
+                                                   class="sp-input res-rc" required/>
                                         </div>
                                         <div class="col-6">
                                             <label class="sp-label">Lectura crítica</label>
-                                            <input type="number" step="0.1" min="0" max="300" name="lecturasCritica" class="sp-input" required/>
+                                            <input type="number" step="0.1" min="0" max="300"
+                                                   name="lecturaCritica"
+                                                   class="sp-input res-lc" required/>
                                         </div>
                                         <div class="col-6">
                                             <label class="sp-label">Comunicación escrita</label>
-                                            <input type="number" step="0.1" min="0" max="300" name="comunicacionEscrita" class="sp-input" required/>
+                                            <input type="number" step="0.1" min="0" max="300"
+                                                   name="comunicacionEscrita"
+                                                   class="sp-input res-ce" required/>
                                         </div>
                                         <div class="col-6">
                                             <label class="sp-label">Competencias ciudadanas</label>
-                                            <input type="number" step="0.1" min="0" max="300" name="competenciasCiudadanas" class="sp-input" required/>
+                                            <input type="number" step="0.1" min="0" max="300"
+                                                   name="competenciasCiudadanas"
+                                                   class="sp-input res-cc" required/>
                                         </div>
                                         <div class="col-6">
                                             <label class="sp-label">Inglés</label>
-                                            <input type="number" step="0.1" min="0" max="300" name="ingles" class="sp-input" required/>
+                                            <input type="number" step="0.1" min="0" max="300"
+                                                   name="ingles"
+                                                   class="sp-input res-ing" required/>
                                         </div>
                                         <div class="col-6">
-                                            <label class="sp-label">Puntaje global</label>
-                                            <input type="number" step="0.1" min="0" max="300" name="puntajeGlobal" class="sp-input" required/>
+                                            <label class="sp-label">
+                                                Puntaje global
+                                                <span style="font-size:9px;color:#059669;font-weight:400">⚡ automático</span>
+                                            </label>
+                                            <input type="number" step="0.1"
+                                                   name="global"
+                                                   class="sp-input res-pg"
+                                                   readonly
+                                                   style="background:#f0fdf4;font-weight:700;color:var(--sp-accent)"
+                                                   required/>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Módulo específico (opcional, más relevante para Saber Pro) -->
+                                <!-- Módulo específico -->
                                 <div class="sp-form-section">
-                                    <div class="sp-form-section-title">Módulo específico <span class="text-muted" style="font-weight:400">(opcional)</span></div>
+                                    <div class="sp-form-section-title">
+                                        Módulo específico
+                                        <span style="font-size:9px;color:#059669;font-weight:400">⚡ nombre automático según carrera</span>
+                                    </div>
                                     <div class="row g-2">
                                         <div class="col-7">
                                             <label class="sp-label">Nombre del módulo</label>
-                                            <input type="text" name="moduloEspecificoNombre" class="sp-input" placeholder="Ej: Ingeniería de Sistemas"/>
+                                            <input type="text" name="moduloEspecificoNombre"
+                                                   class="sp-input res-mn"
+                                                   readonly
+                                                   style="background:#f0fdf4;font-weight:600;color:var(--sp-accent);font-size:11px"
+                                                   th:value="${a.facultadNombre}"/>
                                         </div>
                                         <div class="col-5">
-                                            <label class="sp-label">Puntaje</label>
-                                            <input type="number" step="0.1" min="0" max="300" name="moduloEspecificoPuntaje" class="sp-input"/>
+                                            <label class="sp-label">Puntaje módulo esp.</label>
+                                            <input type="number" step="0.1" min="0" max="300"
+                                                   name="moduloEspecificoPuntaje"
+                                                   class="sp-input res-mp"/>
                                         </div>
                                     </div>
                                 </div>
 
+                                <!-- Clasificación AUTO -->
                                 <div class="sp-form-section">
                                     <div class="sp-form-section-title">Clasificación y observaciones</div>
                                     <div class="row g-2">
                                         <div class="col-12">
-                                            <label class="sp-label">Nivel de desempeño</label>
-                                            <select name="clasificacion" class="sp-input" required>
-                                                <option value="">Seleccionar...</option>
-                                                <option value="SUPERIOR">Superior</option>
-                                                <option value="ALTO">Alto</option>
-                                                <option value="MEDIO">Medio</option>
-                                                <option value="BAJO">Bajo</option>
-                                            </select>
+                                            <label class="sp-label">
+                                                Nivel de desempeño
+                                                <span style="font-size:9px;color:#059669;font-weight:400">⚡ automático según puntaje global</span>
+                                            </label>
+                                            <div class="res-nivel-display"
+                                                 style="padding:6px 10px;border-radius:6px;font-size:12px;font-weight:700;background:#f3f4f6;color:#6b7280;border:1.5px solid #e5e7eb;min-height:34px">
+                                                Ingresa los puntajes para calcular...
+                                            </div>
                                         </div>
                                         <div class="col-12">
-                                            <label class="sp-label">Observaciones <span class="text-muted" style="font-weight:400">(opcional)</span></label>
-                                            <textarea name="observaciones" class="sp-input" rows="2" placeholder="Notas adicionales..."></textarea>
+                                            <label class="sp-label">Observaciones <span style="font-weight:400;color:#9ca3af">(opcional)</span></label>
+                                            <textarea name="observaciones" class="sp-input" rows="2"
+                                                      placeholder="Notas adicionales..."></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -178,8 +224,12 @@
                         <table class="table sp-table mb-0">
                             <thead>
                                 <tr>
-                                    <th>Estudiante</th><th>Tipo prueba</th><th>Período</th>
-                                    <th class="text-center">Global</th><th class="text-center">Nivel</th>
+                                    <th>Estudiante</th>
+                                    <th>Tipo prueba</th>
+                                    <th>Período</th>
+                                    <th class="text-center">Global</th>
+                                    <th class="text-center">Nivel</th>
+                                    <th class="text-center">Beneficio</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -201,13 +251,21 @@
                                     <td class="text-center">
                                         <span th:if="${a.resultadoUnico != null}"
                                               class="badge"
-                                              th:classappend="'bg-' + ${a.resultadoUnico.clasificacionBadge}"
+                                              th:classappend="${a.resultadoUnico.clasificacion == 'SUPERIOR' ? ' bg-success' :
+                                                               a.resultadoUnico.clasificacion == 'ALTO'     ? ' bg-primary' :
+                                                               a.resultadoUnico.clasificacion == 'MEDIO'    ? ' bg-warning text-dark' : ' bg-danger'}"
                                               th:text="${a.resultadoUnico.clasificacion}">-</span>
-                                        <span th:unless="${a.resultadoUnico != null}" class="text-muted small">-</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span th:if="${a.tieneBeneficio}"
+                                              class="badge bg-success"
+                                              th:text="${a.tipoBeneficio}">-</span>
+                                        <span th:unless="${a.tieneBeneficio}"
+                                              class="text-muted small">Sin beneficio</span>
                                     </td>
                                 </tr>
                                 <tr th:if="${#lists.isEmpty(conResultados)}">
-                                    <td colspan="5" class="text-center text-muted py-3">Aún no hay resultados publicados.</td>
+                                    <td colspan="6" class="text-center text-muted py-3">Aún no hay resultados publicados.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -215,6 +273,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 
 </main>
@@ -235,5 +294,65 @@
 .badge-tyt{background:#fef3c7;color:#92400e}
 .badge-saberpro{background:#ede9fe;color:#5b21b6}
 </style>
+
+<script>
+// ✅ Event delegation — sin th:onchange en el HTML
+// Escucha todos los inputs dentro de formularios .res-form
+document.addEventListener('input', function(e) {
+    const form = e.target.closest('.res-form');
+    if (!form) return;
+    calcularAuto(form);
+});
+
+function calcularAuto(form) {
+    // ── 1. PERÍODO según fecha ─────────────────────────────────────────
+    const fechaInput  = form.querySelector('.res-fecha');
+    const periodoInput = form.querySelector('.res-periodo');
+    if (fechaInput && fechaInput.value && periodoInput) {
+        const fecha    = new Date(fechaInput.value + 'T12:00:00');
+        const anio     = fecha.getFullYear();
+        const mes      = fecha.getMonth() + 1;
+        periodoInput.value = anio + (mes <= 6 ? '-1' : '-2');
+    }
+
+    // ── 2. PUNTAJE GLOBAL = promedio de los 5 módulos genéricos ────────
+    const rc  = parseFloat(form.querySelector('.res-rc')?.value)  || 0;
+    const lc  = parseFloat(form.querySelector('.res-lc')?.value)  || 0;
+    const ce  = parseFloat(form.querySelector('.res-ce')?.value)  || 0;
+    const cc  = parseFloat(form.querySelector('.res-cc')?.value)  || 0;
+    const ing = parseFloat(form.querySelector('.res-ing')?.value) || 0;
+
+    const pgInput = form.querySelector('.res-pg');
+    const llenos  = [rc, lc, ce, cc, ing].filter(v => v > 0).length;
+    let   global  = 0;
+
+    if (llenos === 5) {
+        global = Math.round(((rc + lc + ce + cc + ing) / 5) * 10) / 10;
+        if (pgInput) pgInput.value = global;
+    }
+
+    // ── 3. NIVEL DE DESEMPEÑO ──────────────────────────────────────────
+    const display = form.querySelector('.res-nivel-display');
+    if (!display) return;
+
+    if (global > 0) {
+        let nivel, color, bg, emoji;
+        if      (global >= 170) { nivel = 'SUPERIOR'; color = '#065f46'; bg = '#d1fae5'; emoji = '🏆'; }
+        else if (global >= 145) { nivel = 'ALTO';     color = '#1e40af'; bg = '#dbeafe'; emoji = '⭐'; }
+        else if (global >= 120) { nivel = 'MEDIO';    color = '#92400e'; bg = '#fef3c7'; emoji = '📊'; }
+        else                    { nivel = 'BAJO';     color = '#991b1b'; bg = '#fee2e2'; emoji = '📉'; }
+
+        display.textContent       = emoji + ' ' + nivel + ' (puntaje: ' + global + ')';
+        display.style.background  = bg;
+        display.style.color       = color;
+        display.style.borderColor = color;
+    } else {
+        display.textContent       = 'Ingresa los 5 puntajes para calcular...';
+        display.style.background  = '#f3f4f6';
+        display.style.color       = '#6b7280';
+        display.style.borderColor = '#e5e7eb';
+    }
+}
+</script>
 </body>
 </html>

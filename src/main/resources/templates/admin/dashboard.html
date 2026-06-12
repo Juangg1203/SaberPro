@@ -96,7 +96,62 @@
 
     <!-- TABLAS resumen -->
     <div class="row g-4">
-        <div class="col-md-6">
+        <!-- Usuarios del sistema -->
+        <div class="col-12">
+            <div class="sp-card">
+                <div class="sp-card-header">
+                    <span><i class="bi bi-people-fill me-2"></i>Usuarios del Sistema</span>
+                    <a href="/admin/inicializar-usuarios"
+                       class="btn btn-sm btn-warning fw-bold"
+                       onclick="return confirm('¿Reinicializar usuarios del sistema? Esto actualiza las contraseñas a los valores por defecto.')">
+                        <i class="bi bi-arrow-repeat me-1"></i>Reinicializar usuarios
+                    </a>
+                </div>
+                <div class="sp-card-body p-0">
+                    <table class="table sp-table mb-0">
+                        <thead><tr><th>Rol</th><th>Email</th><th>Contraseña por defecto</th><th>Estado</th></tr></thead>
+                        <tbody>
+                            <tr style="background:#f0fdf4">
+                                <td><span class="badge bg-dark">ADMIN</span></td>
+                                <td><code>admin@uts.edu.co</code></td>
+                                <td><code>admin123</code></td>
+                                <td><span class="badge bg-success">Activo</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-primary">COORDINACION</span></td>
+                                <td><code>coordinacion@uts.edu.co</code></td>
+                                <td><code>coord123</code></td>
+                                <td><span class="badge bg-success">Activo</span></td>
+                            </tr>
+                            <tr style="background:#f0fdf4">
+                                <td><span class="badge bg-primary">COORDINACION</span></td>
+                                <td><code>coord2@uts.edu.co</code></td>
+                                <td><code>coord456</code></td>
+                                <td><span class="badge bg-success">Activo</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-warning text-dark">DOCENTE</span></td>
+                                <td><code>docente@uts.edu.co</code></td>
+                                <td><code>doc123</code></td>
+                                <td><span class="badge bg-success">Activo</span></td>
+                            </tr>
+                            <tr style="background:#f0fdf4">
+                                <td><span class="badge bg-warning text-dark">DOCENTE</span></td>
+                                <td><code>docente2@uts.edu.co</code></td>
+                                <td><code>doc456</code></td>
+                                <td><span class="badge bg-success">Activo</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-secondary">ESTUDIANTES</span></td>
+                                <td><code>nombre.APELLIDO@uts.edu.co</code></td>
+                                <td><code>número de cédula</code></td>
+                                <td><span class="badge bg-info">Auto-generado</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
             <div class="sp-card h-100">
                 <div class="sp-card-header">
                     <span><i class="bi bi-building-fill me-2"></i>Facultades registradas</span>
@@ -119,6 +174,7 @@
                 </div>
             </div>
         </div>
+        <!-- Facultades -->
         <div class="col-md-6">
             <div class="sp-card h-100">
                 <div class="sp-card-header">

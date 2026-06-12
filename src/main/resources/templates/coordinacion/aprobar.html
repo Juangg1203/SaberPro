@@ -73,15 +73,47 @@
                                 <span th:text="${a.facultadNombre != null ? a.facultadNombre : 'Sin facultad'}">Facultad</span>
                             </div>
                             <div class="sp-info-row">
-                                <i class="bi bi-book"></i>
-                                <span th:text="${a.programaAcademico}">Programa</span>
-                            </div>
-                            <div class="sp-info-row">
                                 <i class="bi bi-calendar3"></i>
-                                <span th:text="${a.semestre}">Semestre</span>
+                                <span th:text="${a.semestre != null ? a.semestre + '° semestre' : 'Semestre no registrado'}">Semestre</span>
                             </div>
                         </div>
-                        <div class="sp-alumno-actions">
+
+                        <!-- ── INDICADOR DE CRÉDITOS ─────────────────────── -->
+                        <div class="sp-credito-card mt-2"
+                             th:if="${a.creditosTotalesPrograma != null and a.creditosCursados != null}">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span style="font-size:11px;font-weight:700;color:#374151">
+                                    <i class="bi bi-journal-check me-1"></i>Créditos cursados
+                                </span>
+                                <span style="font-size:12px;font-weight:800"
+                                      th:classappend="${a.cumpleRequisitoCreditos() ? ' text-success' : ' text-danger'}"
+                                      th:text="${#numbers.formatDecimal(a.calcularPorcentajeCreditos(),1,1)} + '%'">-%</span>
+                            </div>
+                            <!-- Barra de progreso -->
+                            <div style="height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;position:relative;margin-bottom:6px">
+                                <div th:style="'width:' + ${[a.calcularPorcentajeCreditos() > 100 ? 100 : a.calcularPorcentajeCreditos()]} + '%;height:100%;border-radius:4px;transition:width .4s;background:' + ${a.cumpleRequisitoCreditos() ? '#059669' : '#dc2626'}"></div>
+                                <!-- Marca del 75% -->
+                                <div style="position:absolute;top:0;left:75%;width:2px;height:100%;background:#1d4ed8"></div>
+                            </div>
+                            <div style="font-size:11px" th:if="${a.cumpleRequisitoCreditos()}" class="text-success">
+                                <i class="bi bi-check-circle-fill me-1"></i>
+                                <span th:text="${a.creditosCursados} + ' / ' + ${a.creditosTotalesPrograma} + ' créditos — ✅ Cumple el 75%'">-</span>
+                            </div>
+                            <div style="font-size:11px" th:unless="${a.cumpleRequisitoCreditos()}" class="text-danger">
+                                <i class="bi bi-x-circle-fill me-1"></i>
+                                <span th:text="${a.creditosCursados} + ' / ' + ${a.creditosTotalesPrograma} + ' créditos — Faltan ' + ${a.creditosFaltantes()} + ' para el 75%'">-</span>
+                            </div>
+                        </div>
+
+                        <!-- Sin datos de créditos -->
+                        <div class="sp-credito-card mt-2 text-warning"
+                             th:unless="${a.creditosTotalesPrograma != null and a.creditosCursados != null}"
+                             style="background:#fffbeb;border:1.5px solid #fbbf24;border-radius:8px;padding:8px 12px;font-size:11px">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            Sin datos de créditos — coordinación decidirá manualmente
+                        </div>
+
+                        <div class="sp-alumno-actions mt-2">
                             <form th:action="@{/coordinacion/rechazar/{id}(id=${a.id})}" method="post" style="flex:1">
                                 <button type="submit" class="btn sp-btn-danger w-100"
                                         onclick="return confirm('¿Rechazar esta solicitud?')">
@@ -89,8 +121,11 @@
                                 </button>
                             </form>
                             <form th:action="@{/coordinacion/aprobar/{id}(id=${a.id})}" method="post" style="flex:1">
-                                <button type="submit" class="btn sp-btn-success w-100">
-                                    <i class="bi bi-check-circle me-1"></i>Aprobar
+                                <button type="submit"
+                                        th:class="${a.cumpleRequisitoCreditos() ? 'btn sp-btn-success w-100' : 'btn btn-outline-danger w-100'}"
+                                        th:title="${a.cumpleRequisitoCreditos() ? 'Aprobación automática — cumple 75%' : 'Advertencia: no cumple el 75% de créditos. El sistema rechazará automáticamente.'}">
+                                    <i th:class="${a.cumpleRequisitoCreditos() ? 'bi bi-check-circle me-1' : 'bi bi-exclamation-triangle me-1'}"></i>
+                                    <span th:text="${a.cumpleRequisitoCreditos() ? 'Aprobar ✓' : 'Aprobar (riesgo)'}">Aprobar</span>
                                 </button>
                             </form>
                         </div>
