@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mis Resultados')}"></head>
+<body class="sp-body">
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+<div class="sp-main">
+<div th:replace="~{fragments/layout :: topbar}"></div>
+<main class="sp-content">
+
+    <div class="sp-page-header">
+        <div>
+            <h1 class="sp-page-title"><i class="bi bi-bar-chart-fill me-2"></i>Mis Resultados</h1>
+            <p class="sp-page-subtitle"
+               th:text="${alumno != null and alumno.tipoPrueba == 'TYT' ? 'Resultados Prueba TYT — Tecnólogo' : 'Resultados Saber Pro — Profesional'}">
+                Resultados de tu prueba
+            </p>
+        </div>
+        <a th:href="@{/estudiante/dashboard}" class="btn sp-btn-outline">
+            <i class="bi bi-arrow-left me-1"></i>Volver
+        </a>
+    </div>
+
+    <!-- Sin alumno en sesión -->
+    <div th:if="${alumno == null}" class="sp-card p-5 text-center">
+        <i class="bi bi-lock-fill" style="font-size:3rem;color:var(--sp-text-muted)"></i>
+        <h5 class="mt-3">No encontramos tu registro</h5>
+        <p class="text-muted">Comunícate con coordinación.</p>
+    </div>
+
+    <div th:if="${alumno != null}">
+
+        <!-- Proceso aún no completado -->
+        <div th:if="${alumno.estadoSaberPro != 'RESULTADOS_PUBLICADOS'}" class="sp-card p-5 text-center">
+            <i class="bi bi-hourglass-split" style="font-size:3rem;color:#d97706"></i>
+            <h5 class="mt-3">Resultados aún no disponibles</h5>
+            <p class="text-muted small">
+                Tu proceso está en estado:
+                <strong th:text="${alumno.estadoSaberPro}">-</strong>.
+                <br/>Coordinación publicará tus resultados una vez presentes la prueba
+                <span th:text="${alumno.tipoPrueba == 'TYT' ? 'TYT' : 'Saber Pro'}">-</span>.
+            </p>
+            <a th:href="@{/estudiante/pago}" class="btn sp-btn-outline mt-2">
+                <i class="bi bi-arrow-left me-1"></i>Ver estado del proceso
+            </a>
+        </div>
+
+        <!-- Resultados disponibles -->
+        <div th:if="${alumno.estadoSaberPro == 'RESULTADOS_PUBLICADOS' and resultado != null}">
+
+            <!-- Banner de felicitación -->
+            <div class="sp-result-banner mb-4"
+                 th:classappend="${resultado.clasificacion == 'SUPERIOR' or resultado.clasificacion == 'ALTO' ? ' banner-success' : ' banner-neutral'}">
+                <div class="sp-result-banner-icon">
+                    <i th:class="${resultado.clasificacion == 'SUPERIOR' ? 'bi bi-trophy-fill' : (resultado.clasificacion == 'ALTO' ? 'bi bi-star-fill' : 'bi bi-bar-chart-fill')}"></i>
+                </div>
+                <div>
+                    <div class="sp-result-banner-title"
+                         th:text="${alumno.tipoPrueba == 'TYT' ? 'Resultados Prueba TYT' : 'Resultados Saber Pro'}">-</div>
+                    <div class="sp-result-banner-sub">
+                        Período <span th:text="${resultado.periodo}">-</span>
+                        — Presentado el <span th:text="${resultado.fechaPresentacion != null ? #temporals.format(resultado.fechaPresentacion,'dd/MM/yyyy') : '-'}">-</span>
+                    </div>
+                </div>
+                <div class="ms-auto text-end">
+                    <div class="sp-puntaje-global" th:text="${resultado.puntajeGlobal}">0</div>
+                    <div class="sp-puntaje-label">Puntaje global</div>
+                    <span class="badge mt-1"
+                          th:classappend="'bg-' + ${resultado.clasificacionBadge()}"
+                          th:text="${resultado.clasificacion}">-</span>
+                </div>
+            </div>
+
+            <!-- Tarjetas de puntaje por componente -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="sp-score-card">
+                        <div class="sp-score-icon"><i class="bi bi-calculator-fill"></i></div>
+                        <div class="sp-score-val" th:text="${resultado.razonamientoCuantitativo}">-</div>
+                        <div class="sp-score-lbl">Razonamiento Cuantitativo</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="sp-score-card">
+                        <div class="sp-score-icon"><i class="bi bi-book-fill"></i></div>
+                        <div class="sp-score-val" th:text="${resultado.lecturasCritica}">-</div>
+                        <div class="sp-score-lbl">Lectura Crítica</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="sp-score-card">
+                        <div class="sp-score-icon"><i class="bi bi-pencil-fill"></i></div>
+                        <div class="sp-score-val" th:text="${resultado.comunicacionEscrita}">-</div>
+                        <div class="sp-score-lbl">Comunicación Escrita</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="sp-score-card">
+                        <div class="sp-score-icon"><i class="bi bi-people-fill"></i></div>
+                        <div class="sp-score-val" th:text="${resultado.competenciasCiudadanas}">-</div>
+                        <div class="sp-score-lbl">Competencias Ciudadanas</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="sp-score-card">
+                        <div class="sp-score-icon"><i class="bi bi-translate"></i></div>
+                        <div class="sp-score-val" th:text="${resultado.ingles}">-</div>
+                        <div class="sp-score-lbl">Inglés</div>
+                    </div>
+                </div>
+                <!-- Módulo específico (si existe) -->
+                <div class="col-6 col-md-4 col-lg-2" th:if="${resultado.moduloEspecificoNombre != null}">
+                    <div class="sp-score-card sp-score-card-highlight">
+                        <div class="sp-score-icon"><i class="bi bi-mortarboard-fill"></i></div>
+                        <div class="sp-score-val" th:text="${resultado.moduloEspecificoPuntaje}">-</div>
+                        <div class="sp-score-lbl" th:text="${resultado.moduloEspecificoNombre}">Módulo</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Observaciones -->
+            <div th:if="${resultado.observaciones != null and !resultado.observaciones.isBlank()}"
+                 class="sp-card mb-4">
+                <div class="sp-card-header">
+                    <span><i class="bi bi-chat-left-text-fill me-2"></i>Observaciones de Coordinación</span>
+                </div>
+                <div class="sp-card-body">
+                    <p class="mb-0" style="font-size:14px" th:text="${resultado.observaciones}">-</p>
+                </div>
+            </div>
+
+            <!-- Información del proceso -->
+            <div class="sp-card">
+                <div class="sp-card-header">
+                    <span><i class="bi bi-info-circle-fill me-2"></i>Datos del proceso</span>
+                </div>
+                <div class="sp-card-body">
+                    <div class="row g-3">
+                        <div class="col-sm-4">
+                            <div class="sp-info-tile">
+                                <div class="sp-info-tile-label">Estudiante</div>
+                                <div class="sp-info-tile-val" th:text="${alumno.nombreCompleto}">-</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="sp-info-tile">
+                                <div class="sp-info-tile-label">Cédula</div>
+                                <div class="sp-info-tile-val" th:text="${alumno.cedula}">-</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="sp-info-tile">
+                                <div class="sp-info-tile-label">Programa</div>
+                                <div class="sp-info-tile-val" th:text="${alumno.facultadNombre}">-</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="sp-info-tile">
+                                <div class="sp-info-tile-label">Tipo de prueba</div>
+                                <div class="sp-info-tile-val">
+                                    <span class="sp-prueba-badge"
+                                          th:classappend="${alumno.tipoPrueba == 'TYT' ? ' badge-tyt' : ' badge-saberpro'}"
+                                          th:text="${alumno.tipoPrueba == 'TYT' ? 'Prueba TYT' : 'Saber Pro'}">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="sp-info-tile">
+                                <div class="sp-info-tile-label">Período</div>
+                                <div class="sp-info-tile-val" th:text="${resultado.periodo}">-</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="sp-info-tile">
+                                <div class="sp-info-tile-label">Fecha presentación</div>
+                                <div class="sp-info-tile-val"
+                                     th:text="${resultado.fechaPresentacion != null ? #temporals.format(resultado.fechaPresentacion,'dd/MM/yyyy') : '-'}">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado publicado pero sin objeto resultado (edge case) -->
+        <div th:if="${alumno.estadoSaberPro == 'RESULTADOS_PUBLICADOS' and resultado == null}"
+             class="sp-card p-4 text-center">
+            <i class="bi bi-exclamation-circle" style="font-size:2.5rem;color:#d97706"></i>
+            <h6 class="mt-3">Los resultados están marcados como publicados pero no se encontraron datos.</h6>
+            <p class="text-muted small">Comunícate con coordinación para verificar.</p>
+        </div>
+
+    </div>
+
+</main>
+</div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+<style>
+/* Banner superior */
+.sp-result-banner{display:flex;align-items:center;gap:16px;padding:20px 24px;border-radius:var(--sp-radius);border:1.5px solid var(--sp-border)}
+.banner-success{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-color:#86efac}
+.banner-neutral{background:linear-gradient(135deg,#eff6ff,#dbeafe);border-color:#93c5fd}
+.sp-result-banner-icon{width:48px;height:48px;border-radius:50%;background:var(--sp-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
+.banner-success .sp-result-banner-icon{background:#16a34a}
+.sp-result-banner-title{font-weight:700;font-size:16px;color:var(--sp-accent)}
+.sp-result-banner-sub{font-size:12px;color:var(--sp-text-muted);margin-top:2px}
+.sp-puntaje-global{font-size:2rem;font-weight:800;color:var(--sp-accent);line-height:1}
+.sp-puntaje-label{font-size:11px;color:var(--sp-text-muted)}
+/* Score cards */
+.sp-score-card{background:#fff;border:1.5px solid var(--sp-border-soft);border-radius:var(--sp-radius);padding:16px 12px;text-align:center;transition:box-shadow .2s}
+.sp-score-card:hover{box-shadow:var(--sp-shadow-md)}
+.sp-score-card-highlight{border-color:var(--sp-primary);background:var(--sp-primary-light)}
+.sp-score-icon{font-size:1.4rem;color:var(--sp-primary);margin-bottom:6px}
+.sp-score-card-highlight .sp-score-icon{color:var(--sp-accent)}
+.sp-score-val{font-size:1.6rem;font-weight:800;color:var(--sp-accent)}
+.sp-score-lbl{font-size:10px;color:var(--sp-text-muted);margin-top:4px;line-height:1.3}
+/* Info tiles */
+.sp-info-tile{background:#f9fafb;border-radius:8px;padding:10px 14px}
+.sp-info-tile-label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--sp-text-muted);font-weight:700;margin-bottom:3px}
+.sp-info-tile-val{font-size:13px;font-weight:600;color:var(--sp-accent)}
+/* Badges de prueba */
+.sp-prueba-badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.badge-tyt{background:#fef3c7;color:#92400e}
+.badge-saberpro{background:#ede9fe;color:#5b21b6}
+</style>
+</body>
+</html>

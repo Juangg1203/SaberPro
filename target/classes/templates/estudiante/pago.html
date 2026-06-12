@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Cargue de Pago')}"></head>
+<body class="sp-body">
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+<div class="sp-main">
+<div th:replace="~{fragments/layout :: topbar}"></div>
+<main class="sp-content">
+
+    <div class="sp-page-header">
+        <div>
+            <h1 class="sp-page-title"><i class="bi bi-receipt me-2"></i>Cargue Pago Saber Pro</h1>
+            <p class="sp-page-subtitle">Sube tu comprobante de pago — RF-27/28/29</p>
+        </div>
+        <a th:href="@{/estudiante/dashboard}" class="btn sp-btn-outline"><i class="bi bi-arrow-left me-1"></i>Volver</a>
+    </div>
+
+    <div th:if="${mensaje}" class="alert sp-alert" th:classappend="'alert-' + ${tipoMensaje}" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i><span th:text="${mensaje}"></span>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${alumno == null}" class="sp-card p-5 text-center">
+        <i class="bi bi-lock-fill" style="font-size:3rem;color:var(--sp-text-muted)"></i>
+        <h5 class="mt-3">No encontramos tu registro</h5>
+        <p class="text-muted">Comunícate con coordinación.</p>
+    </div>
+
+    <div th:if="${alumno != null}">
+
+        <!-- Aviso no aprobado -->
+        <div th:if="${!alumno.aprobadoPorCoordinacion}" class="alert alert-warning d-flex align-items-center gap-3 mb-4">
+            <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+            <div><strong>Inscripción pendiente de aprobación</strong><br/>
+                <span class="small">Una vez aprobada tu solicitud podrás cargar el comprobante de pago.</span></div>
+        </div>
+
+        <!-- Banner: pago verificado, pendiente de prueba -->
+        <div th:if="${alumno.pagoVerificado and alumno.estadoPrueba == 'PENDIENTE_PRUEBA'}"
+             class="alert alert-info d-flex align-items-center gap-3 mb-4">
+            <i class="bi bi-mortarboard-fill fs-4"></i>
+            <div>
+                <strong>¡Pago verificado!</strong>
+                Tu siguiente paso es presentar la prueba
+                <strong th:text="${alumno.tipoPrueba == 'TYT' ? 'TYT (Tecnólogo)' : 'Saber Pro (Profesional)'}">-</strong>.
+                <br/><span class="small">Coordina con tu institución la fecha y lugar de presentación.</span>
+            </div>
+        </div>
+
+        <!-- Banner: resultados publicados → ir a verlos -->
+        <div th:if="${alumno.estadoSaberPro == 'RESULTADOS_PUBLICADOS'}"
+             class="alert alert-success d-flex align-items-center gap-3 mb-4">
+            <i class="bi bi-trophy-fill fs-4"></i>
+            <div>
+                <strong>¡Tus resultados ya están disponibles!</strong>
+                Coordinación publicó tu puntaje.
+                <a th:href="@{/estudiante/mis-resultados}" class="btn btn-sm btn-success ms-2">
+                    <i class="bi bi-bar-chart-fill me-1"></i>Ver mis resultados
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Formulario de carga -->
+            <div class="col-md-7">
+                <div class="sp-card h-100">
+                    <div class="sp-card-header"><span><i class="bi bi-cloud-upload-fill me-2"></i>Subir Comprobante</span></div>
+                    <div class="sp-card-body">
+                        <div class="alert alert-light border mb-3" style="font-size:12px">
+                            <i class="bi bi-info-circle me-1 text-primary"></i>
+                            <strong>Requisitos del archivo:</strong> PDF, JPG o PNG — Tamaño máximo: <strong>5 MB</strong>
+                        </div>
+
+                        <!-- Bloqueado si no está aprobado -->
+                        <div th:if="${!alumno.aprobadoPorCoordinacion}" style="opacity:.5;pointer-events:none">
+                            <p class="text-muted text-center py-4"><i class="bi bi-lock-fill me-2"></i>Disponible solo después de aprobación.</p>
+                        </div>
+
+                        <!-- Bloqueado si el pago ya fue verificado (proceso avanzó) -->
+                        <div th:if="${alumno.aprobadoPorCoordinacion and alumno.pagoVerificado}"
+                             class="text-center py-4">
+                            <i class="bi bi-patch-check-fill" style="font-size:3rem;color:var(--sp-primary)"></i>
+                            <h6 class="mt-3" style="color:var(--sp-accent)">Pago verificado</h6>
+                            <p class="text-muted small">Tu comprobante fue revisado y aprobado por coordinación.<br/>
+                                No es necesario subir otro archivo.</p>
+                        </div>
+
+                        <!-- Formulario activo: aprobado pero pago aún no verificado -->
+                        <form th:if="${alumno.aprobadoPorCoordinacion and !alumno.pagoVerificado}"
+                              th:action="@{/estudiante/pago/cargar}" method="post"
+                              enctype="multipart/form-data" id="pagoForm" onsubmit="return validarArchivo()">
+
+                            <div class="sp-dropzone mb-3" id="dropzone" onclick="document.getElementById('comprobanteFile').click()">
+                                <i class="bi bi-file-earmark-arrow-up-fill sp-dz-icon"></i>
+                                <p class="sp-dz-title">Arrastra el archivo aquí o haz clic</p>
+                                <p class="sp-dz-sub">PDF, JPG, PNG — Máximo 5 MB</p>
+                                <input type="file" id="comprobanteFile" name="comprobante"
+                                       accept=".pdf,.jpg,.jpeg,.png"
+                                       style="display:none" required
+                                       onchange="onFileSelected(this)"/>
+                            </div>
+
+                            <div id="filePreview" class="d-none mb-3">
+                                <div style="background:#f0fdf4;border:1.5px solid #6ee7b7;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:12px">
+                                    <i class="bi bi-file-check-fill" style="font-size:1.5rem;color:var(--sp-primary)" id="fileIcon"></i>
+                                    <div style="flex:1;min-width:0">
+                                        <div style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="fileName">archivo.pdf</div>
+                                        <div style="font-size:11px;color:var(--sp-text-muted)" id="fileSize">0 KB</div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="limpiarArchivo()">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="fileError" class="alert alert-danger d-none mb-3" style="font-size:13px">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i><span id="errorMsg"></span>
+                            </div>
+
+                            <button type="submit" class="btn sp-btn-primary w-100">
+                                <i class="bi bi-cloud-upload-fill me-2"></i>Enviar Comprobante
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RF-29: Estado del proceso completo -->
+            <div class="col-md-5">
+                <div class="sp-card h-100">
+                    <div class="sp-card-header"><span><i class="bi bi-clipboard-check-fill me-2"></i>Estado del Proceso</span></div>
+                    <div class="sp-card-body">
+                        <div class="sp-timeline">
+
+                            <!-- Paso 1: Registrado -->
+                            <div class="sp-tl-item tl-done">
+                                <div class="sp-tl-dot"><i class="bi bi-person-check-fill"></i></div>
+                                <div class="sp-tl-content">
+                                    <div class="sp-tl-title">Registrado</div>
+                                    <div class="sp-tl-sub">Tus datos están en el sistema</div>
+                                </div>
+                            </div>
+
+                            <!-- Paso 2: Aprobado por coordinación -->
+                            <div class="sp-tl-item" th:classappend="${alumno.aprobadoPorCoordinacion ? ' tl-done' : ' tl-pending'}">
+                                <div class="sp-tl-dot"><i class="bi bi-clipboard-check-fill"></i></div>
+                                <div class="sp-tl-content">
+                                    <div class="sp-tl-title">Aprobado por Coordinación</div>
+                                    <div class="sp-tl-sub" th:if="${alumno.aprobadoPorCoordinacion}"
+                                         th:text="'Aprobado el ' + ${alumno.fechaAprobacion != null ? #temporals.format(alumno.fechaAprobacion,'dd/MM/yyyy') : ''}">-</div>
+                                    <div class="sp-tl-sub" th:unless="${alumno.aprobadoPorCoordinacion}">En revisión...</div>
+                                </div>
+                            </div>
+
+                            <!-- Paso 3: Comprobante cargado -->
+                            <div class="sp-tl-item" th:classappend="${alumno.comprobantePagoPath != null ? ' tl-done' : ' tl-pending'}">
+                                <div class="sp-tl-dot"><i class="bi bi-receipt-cutoff"></i></div>
+                                <div class="sp-tl-content">
+                                    <div class="sp-tl-title">Comprobante cargado</div>
+                                    <div class="sp-tl-sub" th:if="${alumno.comprobantePagoPath != null}"
+                                         th:text="'Cargado el ' + ${alumno.fechaCargoPago != null ? #temporals.format(alumno.fechaCargoPago,'dd/MM/yyyy HH:mm') : ''}">-</div>
+                                    <div class="sp-tl-sub" th:unless="${alumno.comprobantePagoPath != null}">Pendiente de carga</div>
+                                </div>
+                            </div>
+
+                            <!-- Paso 4: Pago verificado -->
+                            <div class="sp-tl-item" th:classappend="${alumno.pagoVerificado ? ' tl-done' : ' tl-pending'}">
+                                <div class="sp-tl-dot"><i class="bi bi-shield-check-fill"></i></div>
+                                <div class="sp-tl-content">
+                                    <div class="sp-tl-title">Pago verificado</div>
+                                    <div class="sp-tl-sub" th:if="${alumno.pagoVerificado}"
+                                         th:text="'Verificado el ' + ${alumno.fechaVerificacionPago != null ? #temporals.format(alumno.fechaVerificacionPago,'dd/MM/yyyy') : ''}">-</div>
+                                    <div class="sp-tl-sub" th:unless="${alumno.pagoVerificado}">Pendiente de verificación</div>
+                                </div>
+                            </div>
+
+                            <!-- Paso 5: Presentar prueba TYT / Saber Pro -->
+                            <div class="sp-tl-item"
+                                 th:classappend="${alumno.estadoSaberPro == 'RESULTADOS_PUBLICADOS' ? ' tl-done' : (alumno.pagoVerificado ? ' tl-active' : ' tl-pending')}">
+                                <div class="sp-tl-dot"><i class="bi bi-mortarboard-fill"></i></div>
+                                <div class="sp-tl-content">
+                                    <div class="sp-tl-title"
+                                         th:text="${alumno.tipoPrueba == 'TYT' ? 'Presentar Prueba TYT' : 'Presentar Saber Pro'}">
+                                        Presentar Prueba
+                                    </div>
+                                    <div class="sp-tl-sub" th:if="${alumno.pagoVerificado and alumno.estadoSaberPro != 'RESULTADOS_PUBLICADOS'}">
+                                        <span class="badge tl-badge-active">Tu siguiente paso</span>
+                                    </div>
+                                    <div class="sp-tl-sub" th:if="${alumno.estadoSaberPro == 'RESULTADOS_PUBLICADOS'}">Prueba presentada ✓</div>
+                                    <div class="sp-tl-sub" th:unless="${alumno.pagoVerificado}">Pendiente de verificación de pago</div>
+                                </div>
+                            </div>
+
+                            <!-- Paso 6: Resultados publicados -->
+                            <div class="sp-tl-item"
+                                 th:classappend="${alumno.estadoSaberPro == 'RESULTADOS_PUBLICADOS' ? ' tl-done' : ' tl-pending'}">
+                                <div class="sp-tl-dot"><i class="bi bi-bar-chart-fill"></i></div>
+                                <div class="sp-tl-content">
+                                    <div class="sp-tl-title">Resultados publicados</div>
+                                    <div class="sp-tl-sub" th:if="${alumno.estadoSaberPro == 'RESULTADOS_PUBLICADOS'}">
+                                        <a th:href="@{/estudiante/mis-resultados}" style="color:var(--sp-primary);font-weight:600;font-size:11px">
+                                            <i class="bi bi-eye-fill me-1"></i>Ver mis resultados
+                                        </a>
+                                    </div>
+                                    <div class="sp-tl-sub" th:unless="${alumno.estadoSaberPro == 'RESULTADOS_PUBLICADOS'}">
+                                        Coordinación los subirá tras la prueba
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Mensaje de estado contextual -->
+                        <div class="mt-3 p-3"
+                             th:if="${alumno.comprobantePagoPath != null and !alumno.pagoVerificado}"
+                             style="background:var(--sp-primary-light);border-radius:8px;font-size:12px">
+                            <i class="bi bi-check-circle-fill text-success me-1"></i>
+                            <strong>Comprobante recibido.</strong> Coordinación lo revisará pronto.
+                        </div>
+
+                        <div class="mt-3 p-3"
+                             th:if="${alumno.pagoVerificado and alumno.estadoSaberPro != 'RESULTADOS_PUBLICADOS'}"
+                             style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px">
+                            <i class="bi bi-mortarboard-fill me-1" style="color:#2563eb"></i>
+                            <strong>Próximo paso:</strong> Presentar prueba
+                            <strong th:text="${alumno.tipoPrueba == 'TYT' ? 'TYT' : 'Saber Pro'}">-</strong>.
+                            Espera la convocatoria de tu institución.
+                        </div>
+
+                        <div class="mt-3 p-3"
+                             th:if="${alumno.estadoSaberPro == 'RESULTADOS_PUBLICADOS'}"
+                             style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;font-size:12px">
+                            <i class="bi bi-trophy-fill me-1" style="color:#16a34a"></i>
+                            <strong>¡Proceso completado!</strong>
+                            <a th:href="@{/estudiante/mis-resultados}" class="ms-1" style="color:#16a34a;font-weight:600">Ver resultados →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+</div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+<style>
+.sp-dropzone{border:2px dashed var(--sp-primary);border-radius:var(--sp-radius);padding:36px 20px;text-align:center;cursor:pointer;transition:background .2s}
+.sp-dropzone:hover{background:var(--sp-primary-light)}
+.sp-dz-icon{font-size:2.2rem;color:var(--sp-primary);display:block;margin-bottom:10px}
+.sp-dz-title{font-weight:600;color:var(--sp-accent);margin-bottom:4px}
+.sp-dz-sub{font-size:12px;color:var(--sp-text-muted);margin:0}
+/* Timeline */
+.sp-timeline{display:flex;flex-direction:column;gap:0}
+.sp-tl-item{display:flex;gap:12px;padding:10px 0;border-left:2px solid var(--sp-border);margin-left:16px;padding-left:16px;position:relative}
+.sp-tl-item:last-child{border-left-color:transparent}
+.sp-tl-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-left:-29px;border:2px solid var(--sp-border)}
+.tl-done .sp-tl-dot{background:var(--sp-primary);color:#fff;border-color:var(--sp-primary)}
+.tl-pending .sp-tl-dot{background:#f9fafb;color:var(--sp-text-muted);border-color:var(--sp-border)}
+.tl-active .sp-tl-dot{background:#eff6ff;color:#2563eb;border-color:#2563eb;box-shadow:0 0 0 3px #bfdbfe}
+.sp-tl-title{font-weight:600;font-size:13px}
+.sp-tl-sub{font-size:11px;color:var(--sp-text-muted);margin-top:2px}
+.tl-done .sp-tl-title{color:var(--sp-accent)}
+.tl-active .sp-tl-title{color:#2563eb}
+.tl-pending .sp-tl-title{color:var(--sp-text-muted)}
+.tl-badge-active{background:#dbeafe;color:#1d4ed8;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600}
+</style>
+<script>
+function validarArchivo() {
+    const file = document.getElementById('comprobanteFile').files[0];
+    if (!file) { mostrarError('Debes seleccionar un archivo.'); return false; }
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['pdf','jpg','jpeg','png'].includes(ext)) {
+        mostrarError('Tipo de archivo no permitido. Solo PDF, JPG o PNG.');
+        return false;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        mostrarError('El archivo supera 5 MB. Tu archivo: ' + (file.size/1024/1024).toFixed(2) + ' MB');
+        return false;
+    }
+    document.getElementById('fileError').classList.add('d-none');
+    return true;
+}
+function mostrarError(txt) {
+    document.getElementById('errorMsg').textContent = txt;
+    document.getElementById('fileError').classList.remove('d-none');
+}
+function onFileSelected(input) {
+    if (!input.files.length) return;
+    const file = input.files[0];
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = (file.size/1024).toFixed(1) + ' KB';
+    const ext = file.name.split('.').pop().toLowerCase();
+    const icon = document.getElementById('fileIcon');
+    icon.className = ext === 'pdf' ? 'bi bi-filetype-pdf' : 'bi bi-file-image-fill';
+    icon.style.color = ext === 'pdf' ? '#dc2626' : 'var(--sp-primary)';
+    document.getElementById('filePreview').classList.remove('d-none');
+    document.getElementById('fileError').classList.add('d-none');
+}
+function limpiarArchivo() {
+    document.getElementById('comprobanteFile').value = '';
+    document.getElementById('filePreview').classList.add('d-none');
+}
+const dz = document.getElementById('dropzone');
+if (dz) {
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.background='var(--sp-primary-light)'; });
+    dz.addEventListener('dragleave', () => { dz.style.background=''; });
+    dz.addEventListener('drop', e => {
+        e.preventDefault(); dz.style.background='';
+        const input = document.getElementById('comprobanteFile');
+        if (e.dataTransfer.files.length) {
+            const dt = new DataTransfer();
+            dt.items.add(e.dataTransfer.files[0]);
+            input.files = dt.files;
+            onFileSelected(input);
+        }
+    });
+}
+</script>
+</body>
+</html>
