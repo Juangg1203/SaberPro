@@ -2,7 +2,7 @@ FROM eclipse-temurin:21-jdk
 
 WORKDIR /saberpro
 
-COPY target/Saber-Pro_Parcial-0.0.1-SNAPSHOT.jar "ap.jar"
+COPY target/Saber-Pro_Parcial-0.0.1-SNAPSHOT.jar "appp.jar"
 
 EXPOSE 8107
 
